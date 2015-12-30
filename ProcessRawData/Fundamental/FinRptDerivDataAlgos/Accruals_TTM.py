@@ -6,8 +6,6 @@
   Created: 2015/12/29
 """
 
-from datetime import datetime,timedelta
-
 #----------------------------------------------------------------------
 def Calc(cur,lookupDate,rptInfo,stkCode):
     """
@@ -24,44 +22,67 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     lstAnnRptDate = lstYear + "1231"
     lstSameRptDate = lstYear + rptMonth
     
-    sql1 = """
-           SELECT NetIncome
-                 -NETCFO
-           FROM CashFlowStatement
+    sql = """
+           SELECT NetProfits
+           FROM IncomeStatement
            WHERE StkCode='{}'
            AND RPT_DATE='{}'
            AND RDeclareDate<='{}'
            ORDER BY RdeclareDate DESC
            """       
-    
-    if rptInfo[1]==1:
-        sql = sql1
-    else:
-        return None
 
-        
     cur.execute(sql.format(stkCode,rptDate,lookupDate))
     MyPrint(sql.format(stkCode,rptDate,lookupDate))
     content = cur.fetchone()
     if content[0]==None or content==None:
         return None
-    v1 = content[0]
+    v11 = content[0]
         
     cur.execute(sql.format(stkCode,lstAnnRptDate,lookupDate))
-    MyPrint(sql2.format(stkCode,lstAnnRptDate,lookupDate))
+    MyPrint(sql.format(stkCode,lstAnnRptDate,lookupDate))
     content = cur.fetchone()
     if content[0]==None or content==None:
         return None
-    v2 = content[0]
+    v12 = content[0]
     
     cur.execute(sql.format(stkCode,lstSameRptDate,lookupDate))
     MyPrint(sql.format(stkCode,lstSameRptDate,lookupDate))
     content = cur.fetchone()
     if content[0]==None or content==None:
         return None
-    v3 = content[0]
+    v13 = content[0]
+    
+    sql = """
+           SELECT NETCFO
+           FROM CashFlowStatement
+           WHERE StkCode='{}'
+           AND RPT_DATE='{}'
+           AND RDeclareDate<='{}'
+           ORDER BY RdeclareDate DESC
+           """       
+
+    cur.execute(sql.format(stkCode,rptDate,lookupDate))
+    MyPrint(sql.format(stkCode,rptDate,lookupDate))
+    content = cur.fetchone()
+    if content[0]==None or content==None:
+        return None
+    v21 = content[0]
+
+    cur.execute(sql.format(stkCode,lstAnnRptDate,lookupDate))
+    MyPrint(sql.format(stkCode,lstAnnRptDate,lookupDate))
+    content = cur.fetchone()
+    if content[0]==None or content==None:
+        return None
+    v22 = content[0]
+
+    cur.execute(sql.format(stkCode,lstSameRptDate,lookupDate))
+    MyPrint(sql.format(stkCode,lstSameRptDate,lookupDate))
+    content = cur.fetchone()
+    if content[0]==None or content==None:
+        return None
+    v23 = content[0]    
         
-    return rptDate,(v1+v2-v3)
+    return rptDate,v11-v21+v12-v22-v13+v23
 
 
 #----------------------------------------------------------------------

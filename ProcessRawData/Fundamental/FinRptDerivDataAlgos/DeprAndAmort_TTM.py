@@ -6,8 +6,6 @@
   Created: 2015/12/22
 """
 
-from datetime import datetime,timedelta
-
 #----------------------------------------------------------------------
 def Calc(cur,lookupDate,rptInfo,stkCode):
     """
@@ -17,6 +15,7 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     lagDays:从lookupDate向前推lagDays天数，之前更新的信息不使用
     stkCode：股票代码
     """    
+    
     rptDate = rptInfo[0]
     rptYear = rptDate[0:4]
     rptMonth = rptDate[4:]
@@ -49,7 +48,7 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
             v1+=item
         
     cur.execute(sql.format(stkCode,lstAnnRptDate,lookupDate))
-    #MyPrint(sql.format(stkCode,lstAnnRptDate,lookupDate))
+    MyPrint(sql.format(stkCode,lstAnnRptDate,lookupDate))
     content = cur.fetchone()
     if content==None: 
         return None
@@ -63,7 +62,7 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
             v2+=item
     
     cur.execute(sql.format(stkCode,lstSameRptDate,lookupDate))
-    #MyPrint(sql.format(stkCode,lstSameRptDate,lookupDate))
+    MyPrint(sql.format(stkCode,lstSameRptDate,lookupDate))
     content = cur.fetchone()
     if content==None: 
         return None

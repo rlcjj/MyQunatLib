@@ -2,14 +2,14 @@
 #coding:utf-8
 """
   Author:  Wusf --<wushifan221@gmail.com>
-  Purpose: 企业价值
+  Purpose: 
   Created: 2015/12/11
 """
 
 #----------------------------------------------------------------------
 def Calc(cur,lookupDate,rptInfo,stkCode):
     """
-    计算企业价值
+    计算企业带息债务,加法
     cur:内存数据库cursor
     lookupDate:查询当日的日期，返回是至该日期最后更新的信息
     lagDays:从lookupDate向前推lagDays天数，之前更新的信息不使用
@@ -18,11 +18,11 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     
     rptDate = rptInfo[0]
     sql1 = """
-           SELECT ifnull(ShtTrmDebt,0) 
-                  +ifnull(BillPayb,0)
-                  +ifnull(NonCurDebt1Year,0) 
-                  +ifnull(LngTmDebt,0) 
-                  +ifnull(BondPayb,0)
+           SELECT ifnull(ShtTmBorrow,0) 
+                  +ifnull(NotesPayab,0)
+                  +ifnull(NonCurLiabWithin1Year,0) 
+                  +ifnull(LngTmBorrow,0) 
+                  +ifnull(BondPayab,0)
            FROM BalanceSheet
            WHERE StkCode='{}'
            AND RPT_DATE='{}'
@@ -30,12 +30,12 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
            ORDER BY RdeclareDate DESC
            """
     sql3 = """
-           SELECT ifnull(ShtTrmDebt,0) 
+           SELECT ifnull(ShtTmBorrow,0) 
                   +ifnull(BorrFromCentralBank,0)
                   +ifnull(OtherFinInstituteDeposit,0)
                   +ifnull(BorrFromOtherFinInst,0) 
                   +ifnull(FinAssetSoldForRepurchase,0) 
-                  +ifnull(LngTmDebt,0) 
+                  +ifnull(LngTmBorrow,0) 
                   +ifnull(PolicyHolderDeposit,0)
            FROM BalanceSheet
            WHERE StkCode='{}'
@@ -44,12 +44,12 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
            ORDER BY RdeclareDate DESC
            """            
     sql4 = """
-           SELECT ifnull(ShtTrmDebt,0) 
+           SELECT ifnull(ShtTmBorrow,0) 
                   +ifnull(ShrtTrmFinBillPayb,0)
                   +ifnull(BorrFromOtherFinInst,0)
                   +ifnull(FinAssetSoldForRepurchase,0) 
-                  +ifnull(LngTmDebt,0) 
-                  +ifnull(BondPayb,0)
+                  +ifnull(LngTmBorrow,0) 
+                  +ifnull(BondPayab,0)
            FROM BalanceSheet
            WHERE StkCode='{}'
            AND RPT_DATE='{}'

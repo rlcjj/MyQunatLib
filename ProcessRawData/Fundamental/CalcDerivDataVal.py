@@ -34,9 +34,6 @@ class CalcFinRptDerivData(object):
         cur.execute("CREATE INDEX Id3 ON CashFlowStatement (rpt_date,rpttype,stkCode,rdeclaredate)")
         cur.execute("CREATE INDEX IdD ON Divident (Date)")
         print "Finished"
-        cur.execute("select * from divident ")
-        a = cur.fetchone()
-        print a
     
     #----------------------------------------------------------------------
     def GetAllStocks(self):
@@ -95,7 +92,7 @@ class CalcFinRptDerivData(object):
         MyPrint(sql.format(stkCode,lookupLimit,lookupDate,lookupDate))
         content = cur.fetchone()
         if content==None:
-            return None
+            return None,None
         rptInfo = content            
 
         indicator = algo.Calc(cur,lookupDate,rptInfo,stkCode)

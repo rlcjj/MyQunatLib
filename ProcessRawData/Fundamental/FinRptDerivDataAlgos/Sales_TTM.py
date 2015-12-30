@@ -6,8 +6,6 @@
   Created: 2015/12/23
 """
 
-from datetime import datetime,timedelta
-
 #----------------------------------------------------------------------
 def Calc(cur,lookupDate,rptInfo,stkCode):
     """
@@ -17,6 +15,7 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     lagDays:从lookupDate向前推lagDays天数，之前更新的信息不使用
     stkCode：股票代码
     """    
+    
     rptDate = rptInfo[0]
     rptYear = rptDate[0:4]
     rptMonth = rptDate[4:]
@@ -24,20 +23,14 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     lstAnnRptDate = lstYear + "1231"
     lstSameRptDate = lstYear + rptMonth
     
-    sql1 = """
-           SELECT OprtRevenue
+    sql = """
+           SELECT OpRevenue
            FROM IncomeStatement 
            WHERE StkCode='{}'
            AND RPT_DATE='{}'
            AND RDeclareDate<='{}'
            ORDER BY RdeclareDate DESC
            """       
-    
-    if rptInfo[1]==1:
-        sql = sql1
-    else:
-        return None
-
         
     cur.execute(sql.format(stkCode,rptDate,lookupDate))
     MyPrint(sql.format(stkCode,rptDate,lookupDate))
@@ -47,7 +40,7 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     v1 = content[0]
         
     cur.execute(sql.format(stkCode,lstAnnRptDate,lookupDate))
-    MyPrint(sql2.format(stkCode,lstAnnRptDate,lookupDate))
+    MyPrint(sql.format(stkCode,lstAnnRptDate,lookupDate))
     content = cur.fetchone()
     if content[0]==None or content==None:
         return None
@@ -60,7 +53,7 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
         return None
     v3 = content[0]
         
-    return rptDate,(v1+v2-v3)
+    return rptDate,v1+v2-v3
 
 
 #----------------------------------------------------------------------

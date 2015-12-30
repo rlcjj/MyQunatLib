@@ -6,8 +6,6 @@
   Created: 2015/12/29
 """
 
-from datetime import datetime,timedelta
-
 #----------------------------------------------------------------------
 def Calc(cur,lookupDate,rptInfo,stkCode):
     """
@@ -24,21 +22,15 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     lstAnnRptDate = lstYear + "1231"
     lstSameRptDate = lstYear + rptMonth
     
-    sql1 = """
-           SELECT OprtCost
+    sql = """
+           SELECT OpCost
            FROM IncomeStatement 
            WHERE StkCode='{}'
            AND RPT_DATE='{}'
            AND RDeclareDate<='{}'
            ORDER BY RdeclareDate DESC
            """       
-    
-    if rptInfo[1]==1:
-        sql = sql1
-    else:
-        return None
-
-        
+            
     cur.execute(sql.format(stkCode,rptDate,lookupDate))
     MyPrint(sql.format(stkCode,rptDate,lookupDate))
     content = cur.fetchone()
@@ -47,7 +39,7 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     v1 = content[0]
         
     cur.execute(sql.format(stkCode,lstAnnRptDate,lookupDate))
-    MyPrint(sql2.format(stkCode,lstAnnRptDate,lookupDate))
+    MyPrint(sql.format(stkCode,lstAnnRptDate,lookupDate))
     content = cur.fetchone()
     if content[0]==None or content==None:
         return None
@@ -60,7 +52,7 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
         return None
     v3 = content[0]
         
-    return rptDate,(v1+v2-v3)
+    return rptDate,v1+v2-v3
 
 
 #----------------------------------------------------------------------

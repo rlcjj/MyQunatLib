@@ -10,7 +10,7 @@ import os,sys
 import pyodbc,cx_Oracle
 from ConfigParser import ConfigParser
 os.environ['NLS_LANG'] = 'SIMPLIFIED CHINESE_CHINA.UTF8'
-root = os.path.abspath(__file__).split("PyQuantStrategy")[0]+"\\PyQuantStrategy"
+root = os.path.abspath(__file__).split("MyQuantLib")[0]+"\\MyQuantLib"
 sys.path.append(root)
 
 ########################################################################

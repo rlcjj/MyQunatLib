@@ -6,8 +6,6 @@
   Created: 2015/12/29
 """
 
-from datetime import datetime,timedelta
-
 #----------------------------------------------------------------------
 def Calc(cur,lookupDate,rptInfo,stkCode):
     """
@@ -16,7 +14,8 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     lookupDate:查询当日的日期，返回是至该日期最后更新的信息
     lagDays:从lookupDate向前推lagDays天数，之前更新的信息不使用
     stkCode：股票代码
-    """    
+    """
+    
     rptDate = rptInfo[0]
     rptYear = rptDate[0:4]
     rptMonth = rptDate[4:]
@@ -25,7 +24,7 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     lstSameRptDate = lstYear + rptMonth
     
     sql =  """
-           SELECT TotCurAsset
+           SELECT TotCurAssets
                  -TotCurLiab
            FROM BalanceSheet
            WHERE StkCode='{}'

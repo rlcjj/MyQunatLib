@@ -6,8 +6,6 @@
   Created: 2015/12/28
 """
 
-from datetime import datetime,timedelta
-
 #----------------------------------------------------------------------
 def Calc(cur,lookupDate,rptInfo,stkCode):
     """
@@ -17,6 +15,7 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     lagDays:从lookupDate向前推lagDays天数，之前更新的信息不使用
     stkCode：股票代码
     """    
+    
     thisYear = lookupDate[0:4]
     lstYear = str(int(thisYear)-1)
     lst2Year = str(int(thisYear)-2)
