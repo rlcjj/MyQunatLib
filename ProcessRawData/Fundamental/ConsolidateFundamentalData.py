@@ -8,14 +8,14 @@
 
 import os,sys,logging ,time,decimal,codecs
 import sqlite3 as lite
-root = os.path.abspath(__file__).split("PyQuantStrategy")[0]+"PyQuantStrategy"
+root = os.path.abspath(__file__).split("MyQuantLib")[0]+"MyQuantLib"
 sys.path.append(root)
 import Tools.GetLocalDatabasePath as GetPath
 import DefineInvestUniverse.GetIndexCompStocks as CompStks
 import ProcessRawData.Fundamental.CalcFinRptDerivData as CalcFinDeriv
 
 ########################################################################
-class GenFinRptDerivData(object):
+class ConsolidateData(object):
     """"""
 
     #----------------------------------------------------------------------
@@ -29,7 +29,7 @@ class GenFinRptDerivData(object):
         self.locDbPath = GetPath.GetLocalDatabasePath()
         
     #----------------------------------------------------------------------
-    def DefineStockUniverse(self,dbAddress,indexCode):
+    def SetStockUniverse(self,dbAddress,indexCode):
         """"""
         self.indexCode = indexCode
         self.compStks = CompStks.GetIndexCompStocks(dbAddress)
@@ -37,14 +37,14 @@ class GenFinRptDerivData(object):
 
 
     #----------------------------------------------------------------------
-    def AppendIndicators(self,*indicators):
+    def AppendFinRptItems(self,*items):
         """"""
-        self.indicators = []
-        for indic in indicators:
-            self.indicators.append(indic)
+        self.items = []
+        for indic in items:
+            self.items.append(indic)
     
     #----------------------------------------------------------------------
-    def CreateIndicatorDatabase(self,indicDbName):
+    def CreateDatabase(self,indicDbName):
         """"""
         indicDbAdrr = self.locDbPath["ProcEquity"]+indicDbName
         self.indicConn = lite.connect(indicDbAdrr)
@@ -52,9 +52,9 @@ class GenFinRptDerivData(object):
         cur.execute("DROP TABLE IF EXISTS FinRptDerivData")
         cur.execute("PRAGMA synchronous = OFF")
         sqlStr = ""
-        for indic in self.indicators:
-            indicName = indic.__name__.split('.')[-1]
-            sqlStr+=","+indicName+" FLOAT"
+        for item in self.items:
+            itemName = item.__name__.split('.')[-1]
+            sqlStr+=","+itemName+" FLOAT"
         cur.execute("""
                     CREATE TABLE FinRptDerivData(StkCode TEXT,
                                                  AcctPeriod TEXT,
@@ -64,7 +64,7 @@ class GenFinRptDerivData(object):
         
     
     #----------------------------------------------------------------------
-    def GenDerivData(self):
+    def GenerateData(self):
         """"""
         finRptDbPath = self.locDbPath["RawEquity"]+"FinRptData\\FinRptData_Wind_CICC.db"
         mktDataDbPath = self.locDbPath["RawEquity"]+"MktData\\MktData_Wind_CICC.db"
@@ -72,8 +72,8 @@ class GenFinRptDerivData(object):
         allStks = self.compStks.GetAllStocks('000300')
         
         cur = self.indicConn.cursor()
-        lenOfIndicat = len(self.indicators)
-        insertSql = "?,?,?"+lenOfIndicat*",?"
+        lenOfItems = len(self.items)
+        insertSql = "?,?,?"+lenOfItems*",?"
         for stk in allStks:
             print stk
             date = self.compStks.GetIncludeAndExcludeDate(stk,'000300')
@@ -83,14 +83,14 @@ class GenFinRptDerivData(object):
             for dt in rptDeclareDate:
                 acctPeriod = ""
                 val = []
-                for indic in self.indicators:
-                    indicVal = calcFinDeriv.Calc(dt,300,stk,indic)
-                    if indicVal == None:
+                for item in self.items:
+                    itemVal = calcFinDeriv.Calc(dt,300,stk,item)
+                    if itemVal == None:
                         acctPeriod = None
                         _val = None
                     else:
-                        acctPeriod = indicVal[0]
-                        _val = indicVal[1]
+                        acctPeriod = itemVal[0]
+                        _val = itemVal[1]
                     val.append(_val)
                 row = [stk,acctPeriod,dt]
                 for v in val:
