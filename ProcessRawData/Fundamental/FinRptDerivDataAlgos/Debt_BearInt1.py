@@ -45,7 +45,7 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
            """            
     sql4 = """
            SELECT ifnull(ShtTmBorrow,0) 
-                  +ifnull(ShrtTrmFinBillPayb,0)
+                  +ifnull(ShrtTmFinBillPayab,0)
                   +ifnull(BorrFromOtherFinInst,0)
                   +ifnull(FinAssetSoldForRepurchase,0) 
                   +ifnull(LngTmBorrow,0) 
@@ -66,7 +66,9 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
         sql = sql4
     cur.execute(sql.format(stkCode,rptDate,lookupDate))
     #MyPrint(sql.format(stkCode,rptDate,lookupDate))
-    content = cur.fetchone()    
+    content = cur.fetchone()  
+    if content==None:
+        return None       
     if content==None or content[0]==None or content[0]==0:
         return None
     return rptDate,content[0]

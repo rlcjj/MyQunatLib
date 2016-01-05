@@ -34,6 +34,8 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     cur.execute(sql.format(stkCode,rptDate,lookupDate))
     MyPrint(sql.format(stkCode,rptDate,lookupDate))
     content = cur.fetchone()
+    if content==None:
+        return None    
     if content[0]==None or content==None:
         return None
     v11 = content[0]
@@ -41,6 +43,8 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     cur.execute(sql.format(stkCode,lstAnnRptDate,lookupDate))
     MyPrint(sql.format(stkCode,lstAnnRptDate,lookupDate))
     content = cur.fetchone()
+    if content==None:
+        return None     
     if content[0]==None or content==None:
         return None
     v12 = content[0]
@@ -48,6 +52,8 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     cur.execute(sql.format(stkCode,lstSameRptDate,lookupDate))
     MyPrint(sql.format(stkCode,lstSameRptDate,lookupDate))
     content = cur.fetchone()
+    if content==None:
+        return None     
     if content[0]==None or content==None:
         return None
     v13 = content[0]
@@ -64,6 +70,8 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     cur.execute(sql.format(stkCode,rptDate,lookupDate))
     MyPrint(sql.format(stkCode,rptDate,lookupDate))
     content = cur.fetchone()
+    if content==None:
+        return None     
     if content[0]==None or content==None:
         return None
     v21 = content[0]
@@ -71,6 +79,8 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     cur.execute(sql.format(stkCode,lstAnnRptDate,lookupDate))
     MyPrint(sql.format(stkCode,lstAnnRptDate,lookupDate))
     content = cur.fetchone()
+    if content==None:
+        return None     
     if content[0]==None or content==None:
         return None
     v22 = content[0]
@@ -78,6 +88,8 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     cur.execute(sql.format(stkCode,lstSameRptDate,lookupDate))
     MyPrint(sql.format(stkCode,lstSameRptDate,lookupDate))
     content = cur.fetchone()
+    if content==None:
+        return None     
     if content[0]==None or content==None:
         return None
     v23 = content[0]    

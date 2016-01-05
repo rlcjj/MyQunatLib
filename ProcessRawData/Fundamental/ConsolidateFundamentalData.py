@@ -12,7 +12,7 @@ root = os.path.abspath(__file__).split("MyQuantLib")[0]+"MyQuantLib"
 sys.path.append(root)
 import Tools.GetLocalDatabasePath as GetPath
 import DefineInvestUniverse.GetIndexCompStocks as CompStks
-import ProcessRawData.Fundamental.CalcFinRptDerivData as CalcFinDeriv
+import ProcessRawData.Fundamental.CalcDerivDataVal as CalcFinDeriv
 
 ########################################################################
 class ConsolidateData(object):
@@ -37,7 +37,7 @@ class ConsolidateData(object):
 
 
     #----------------------------------------------------------------------
-    def AppendFinRptItems(self,*items):
+    def AppendFinRptItems(self,items):
         """"""
         self.items = []
         for indic in items:
@@ -79,23 +79,25 @@ class ConsolidateData(object):
             date = self.compStks.GetIncludeAndExcludeDate(stk,'000300')
             begDate = date[0][0]
             endDate = date[-1][1]
-            rptDeclareDate = calcFinDeriv.GetReportDeclareDate(stk,begDate,endDate)
+            rptDeclareDate = calcFinDeriv.GetReportDeclareDates(stk,begDate,endDate)
             for dt in rptDeclareDate:
                 acctPeriod = ""
                 val = []
-                for item in self.items:
-                    itemVal = calcFinDeriv.Calc(dt,300,stk,item)
-                    if itemVal == None:
-                        acctPeriod = None
-                        _val = None
-                    else:
-                        acctPeriod = itemVal[0]
-                        _val = itemVal[1]
-                    val.append(_val)
-                row = [stk,acctPeriod,dt]
-                for v in val:
-                    row.append(v)
-                cur.execute("INSERT INTO FinRptDerivData VALUES ({})".format(insertSql),tuple(row))
+                #for item in self.items:
+                itemVals = calcFinDeriv.Calc(dt,300,stk,self.items)
+                if itemVals!=None:
+                    for itemVal in itemVals:
+                        if itemVal == None:
+                            acctPeriod = None
+                            _val = None
+                        else:
+                            acctPeriod = itemVal[0]
+                            _val = itemVal[1]
+                        val.append(_val)
+                    row = [stk,acctPeriod,dt]
+                    for v in val:
+                        row.append(v)
+                    cur.execute("INSERT INTO FinRptDerivData VALUES ({})".format(insertSql),tuple(row))
         self.indicConn.commit()
                     
             

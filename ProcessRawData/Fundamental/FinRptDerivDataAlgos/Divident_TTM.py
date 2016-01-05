@@ -36,7 +36,7 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     cur.execute(sql.format(stkCode,lookupDate))
     MyPrint(sql.format(stkCode,lookupDate))
     content = cur.fetchall()
-    if content==None:
+    if len(content)==0:
         return None
     if len(content)==1:
         if content[0][0]>=lst2AnnRptDate:

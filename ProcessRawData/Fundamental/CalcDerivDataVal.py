@@ -47,7 +47,7 @@ class CalcFinRptDerivData(object):
         return allStks
     
     #----------------------------------------------------------------------
-    def GetReportDeclareDate(self,stkCode,begDate,endDate):
+    def GetReportDeclareDates(self,stkCode,begDate,endDate):
         """"""
         if endDate == None:
             endDate = "20200101" #Some day in the far future
@@ -65,14 +65,14 @@ class CalcFinRptDerivData(object):
                     ORDER BY RDeclareDate ASC
                     """.format(stkCode,rBegDate,rEndDate))
         rows = cur.fetchall()
-        declareDate = []
+        declareDates = []
         for row in rows:
-            declareDate.append(row[0])
-        return declareDate        
-        
+            declareDates.append(row[0])
+        return declareDates        
+            
     
     #----------------------------------------------------------------------
-    def Calc(self,lookupDate,lagDays,stkCode,algo):
+    def Calc(self,lookupDate,lagDays,stkCode,algos):
         """"""
         tm1 = time.time()
         
@@ -92,13 +92,16 @@ class CalcFinRptDerivData(object):
         MyPrint(sql.format(stkCode,lookupLimit,lookupDate,lookupDate))
         content = cur.fetchone()
         if content==None:
-            return None,None
-        rptInfo = content            
-
-        indicator = algo.Calc(cur,lookupDate,rptInfo,stkCode)
+            return None
+        rptInfo = content
+        derivData = []
+        for algo in algos:
+            _derivData = algo.Calc(cur,lookupDate,rptInfo,stkCode)
+            derivData.append(_derivData)
         tm2 = time.time()
+        
         #print "Time consume:{}".format(tm2-tm1)
-        return indicator
+        return derivData
     
 #----------------------------------------------------------------------
 def MyPrint(arg):

@@ -68,6 +68,8 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     cur.execute(sql.format(stkCode,rptDate,lookupDate))
     MyPrint(sql.format(stkCode,rptDate,lookupDate))
     content = cur.fetchone()
+    if content==None:
+        return None       
     if content[0]==None or content==None:
         return None
     v1 = content[0]
@@ -75,6 +77,8 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     cur.execute(sql.format(stkCode,lstAnnRptDate,lookupDate))
     MyPrint(sql.format(stkCode,lstAnnRptDate,lookupDate))
     content = cur.fetchone()
+    if content==None:
+        return None       
     if content[0]==None or content==None:
         return None
     v2 = content[0]
@@ -82,6 +86,8 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     cur.execute(sql.format(stkCode,lstSameRptDate,lookupDate))
     MyPrint(sql.format(stkCode,lstSameRptDate,lookupDate))
     content = cur.fetchone()
+    if content==None:
+        return None       
     if content[0]==None or content==None:
         return None
     v3 = content[0]

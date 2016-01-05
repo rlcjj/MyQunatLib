@@ -38,7 +38,9 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
 
     cur.execute(sql.format(stkCode,rptDate,lookupDate))
     #MyPrint(sql.format(stkCode,rptDate,lookupDate))
-    content = cur.fetchone()    
+    content = cur.fetchone()
+    if content==None:
+        return None       
     if content==None or content[0]==None or content[0]==0:
         return None
     return rptDate,content[0]
