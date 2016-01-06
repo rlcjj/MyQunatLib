@@ -26,11 +26,11 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     lst2SemiRptDate = lst2Year + "0630"    
     
     sql =  """
-           SELECT DivYear,Date,DivRatio_Num
-           FROM Divident
+           SELECT RPT_DATE,RDeclareDate,DivRatio_Num
+           FROM Dividend
            WHERE StkCode='{}'
-           AND Date<='{}'
-           ORDER BY Date DESC
+           AND RDeclareDate<='{}'
+           ORDER BY RDeclareDate DESC
            LIMIT 2
            """    
     cur.execute(sql.format(stkCode,lookupDate))

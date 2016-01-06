@@ -79,7 +79,7 @@ class ConsolidateData(object):
             date = self.compStks.GetIncludeAndExcludeDate(stk,'000300')
             begDate = date[0][0]
             endDate = date[-1][1]
-            rptDeclareDate = calcFinDeriv.GetReportDeclareDates(stk,begDate,endDate)
+            rptDeclareDate = calcFinDeriv.GetFinDataDeclareDates(stk,begDate,endDate)
             for dt in rptDeclareDate:
                 acctPeriod = ""
                 val = []
