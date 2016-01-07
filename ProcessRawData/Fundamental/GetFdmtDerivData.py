@@ -142,26 +142,10 @@ class GetFdmtDerivData(object):
         tm1 = time.time()
         
         cur = self.conn.cursor()
-        
-        _lookupDate = datetime.strptime(lookupDate,"%Y%m%d")
-        _lookupLimit = _lookupDate - timedelta(days=lagDays)
-        lookupLimit = _lookupLimit.strftime("%Y%m%d")    
-        sql = """
-              SELECT RPT_DATE,CompanyType,IsNewRule,IsListed 
-              FROM BalanceSheet 
-              WHERE StkCode='{}' AND RPT_DATE>'{}' AND RPT_DATE<'{}'
-              AND RDeclareDate<='{}'
-              ORDER BY RPT_DATE+RDeclareDate DESC LIMIT 1
-              """
-        cur.execute(sql.format(stkCode,lookupLimit,lookupDate,lookupDate))
-        MyPrint(sql.format(stkCode,lookupLimit,lookupDate,lookupDate))
-        content = cur.fetchone()
-        if content==None:
-            return None
-        rptInfo = content
+
         derivData = []
         for algo in algos:
-            _derivData = algo.Calc(cur,lookupDate,rptInfo,stkCode)
+            _derivData = algo.Calc(cur,lookupDate,"",stkCode)
             derivData.append(_derivData)
         tm2 = time.time()
         
