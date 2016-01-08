@@ -77,7 +77,7 @@ class GetFdmtDerivData(object):
         return declareDates      
     
     #----------------------------------------------------------------------
-    def GetAnalystDataDeclareDate(self,stkCode,begDate,endDate):
+    def GetForecastDataDeclareDate(self,stkCode,begDate,endDate):
         """"""
         if endDate == None:
             endDate = "20200101" #Some day in the far future
@@ -137,7 +137,7 @@ class GetFdmtDerivData(object):
         return derivData
     
     #----------------------------------------------------------------------
-    def CalcAnalystDerivData(self,lookupDate,lagDays,stkCode,algos):
+    def CalcForecastDerivData(self,lookupDate,lagDays,stkCode,algos):
         """"""
         tm1 = time.time()
         
