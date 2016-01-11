@@ -22,7 +22,7 @@ def Calc(cur,date,stkCode):
     endDate = date[1]
     
     sql = """
-          SELECT EPS_TTM 
+          SELECT Earning_TTM
           FROM FinRptDerivData
           WHERE StkCode='{}'
                 AND DeclareDate>='{}'
@@ -31,21 +31,10 @@ def Calc(cur,date,stkCode):
           """
     cur.execute(sql.format(stkCode,begDate,endDate))
     content = cur.fetchone()
-    if content==None or content[0]==None:
+    if content==None:
+        return None
+    if content[0]==None:
         return None    
-    v1 = content[0]
-    
-    sql ="""
-         SELECT TC 
-         FROM MktData
-         WHERE StkCode='{}'
-         AND Date<='{}'
-         ORDER BY Date DESC LIMIT 1
-         """        
-    cur.execute(sql.format(stkCode,endDate))
-    content = cur.fetchone()
-    if content==None or content[0]==None:
-        return None    
-    v2 = content[0]    
-    #print stkCode,v1,v2
-    return v1/v2
+    v = content[0]
+    print v,s,p
+    return v/s/p/10000.0
