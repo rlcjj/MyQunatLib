@@ -100,22 +100,11 @@ class ConsolidateData(object):
             endDate = date[-1][1]
             rptDeclareDate = fdmtData.GetFinDataDeclareDate(stk,begDate,endDate)
             for dt in rptDeclareDate:
-                acctPeriod = ""
-                val = []
-                #for item in self.items:
                 itemVals = fdmtData.CalcFinRptDerivData(dt,300,stk,self.items1)
                 if itemVals!=None:
-                    for itemVal in itemVals:
-                        if itemVal == None:
-                            acctPeriod = None
-                            _val = None
-                        else:
-                            acctPeriod = itemVal[0]
-                            _val = itemVal[1]
-                        val.append(_val)
-                    row = [stk,acctPeriod,dt]
-                    for v in val:
-                        row.append(v)
+                    row = [stk,itemVals[0],dt]
+                    for itemVal in itemVals[1]:
+                        row.append(itemVal)
                     cur.execute("INSERT INTO FinRptDerivData VALUES ({})".format(insertSql),tuple(row))
         self.indicConn.commit()
         
@@ -129,22 +118,11 @@ class ConsolidateData(object):
             endDate = date[-1][1]
             rptDeclareDate = fdmtData.GetForecastDataDeclareDate(stk,begDate,endDate)
             for dt in rptDeclareDate:
-                acctPeriod = ""
-                val = []
-                #for item in self.items:
                 itemVals = fdmtData.CalcForecastDerivData(dt,300,stk,self.items2)
                 if itemVals!=None:
-                    for itemVal in itemVals:
-                        if itemVal == None:
-                            acctPeriod = None
-                            _val = None
-                        else:
-                            acctPeriod = itemVal[0]
-                            _val = itemVal[1]
-                        val.append(_val)
-                    row = [stk,acctPeriod,dt]
-                    for v in val:
-                        row.append(v)
+                    row = [stk,itemVals[0],dt]
+                    for itemVal in itemVals[1]:
+                        row.append(itemVal)
                     cur.execute("INSERT INTO ForecastData VALUES ({})".format(insertSql),tuple(row))
         self.indicConn.commit()        
                     

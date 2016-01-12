@@ -40,7 +40,7 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
         return None
     if len(content)==1:
         if content[0][0]>=lst2AnnRptDate:
-            return content[0][0],content[0][2]
+            return content[0][2]
         else:
             return None
 
@@ -69,7 +69,7 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     else:
         return None
         
-    return content[0][0],v
+    return v
 
 
 #----------------------------------------------------------------------

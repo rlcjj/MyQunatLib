@@ -74,7 +74,7 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
             v3+=0
         else:
             v3+=item
-    return rptDate,(v1+v2-v3)
+    return v1+v2-v3
 
 
 #----------------------------------------------------------------------

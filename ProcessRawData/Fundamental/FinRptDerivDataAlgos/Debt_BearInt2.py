@@ -43,5 +43,5 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
         return None       
     if content==None or content[0]==None or content[0]==0:
         return None
-    return rptDate,content[0]
+    return content[0]
         

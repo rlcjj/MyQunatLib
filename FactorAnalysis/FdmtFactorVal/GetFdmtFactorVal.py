@@ -89,8 +89,6 @@ class GetFdmtFactorVal(object):
         content = cur.fetchone()
         if content==None:
             return None
-        if content[0]==None:
-            return None    
         p = content[0]    
     
         sql = """
@@ -103,14 +101,27 @@ class GetFdmtFactorVal(object):
         cur.execute(sql.format(stkCode,endDate))
         content = cur.fetchone()
         if content==None:
-            return None
-        if content[0]==None:
-            return None    
+            return None  
         s = content[0]     
-
+        
+        sql = """
+              SELECT DISTINCT AcctPeriod
+              FROM FinRptDerivData
+              WHERE StkCode='{}'
+                    AND DeclareDate<='{}'
+              ORDER BY AcctPeriod DESC LIMIT 5
+              """
+        cur.execute(sql.format(stkCode,endDate))
+        content = cur.fetchall()
+        if content==None:
+            return None
+        AcctPeriods = []
+        for row in content:
+            AcctPeriods.append(row[0])
+        
         factorVals = []
         for algo in algos:
-            factorVal = algo.Calc(cur,p,s,date,stkCode)
+            factorVal = algo.Calc(cur,AcctPeriods,p,s,date,stkCode)
             factorVals.append(factorVal)
         tm2 = time.time()
         #print "Time consume:{}".format(tm2-tm1)

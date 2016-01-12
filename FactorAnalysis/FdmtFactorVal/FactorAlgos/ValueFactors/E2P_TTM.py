@@ -6,11 +6,8 @@
   Created: 2015/12/17
 """
 
-from datetime import datetime,timedelta
-
-
 #----------------------------------------------------------------------
-def Calc(cur,date,stkCode):
+def Calc(cur,acctPeriods,p,s,date,stkCode):
     """"""
     """
     计算过去12月内E/P

@@ -134,7 +134,7 @@ class GetFdmtDerivData(object):
         tm2 = time.time()
         
         #print "Time consume:{}".format(tm2-tm1)
-        return derivData
+        return content[0],derivData
     
     #----------------------------------------------------------------------
     def CalcForecastDerivData(self,lookupDate,lagDays,stkCode,algos):
@@ -148,9 +148,9 @@ class GetFdmtDerivData(object):
             _derivData = algo.Calc(cur,lookupDate,"",stkCode)
             derivData.append(_derivData)
         tm2 = time.time()
-        
+        thisAcctYear = lookupDate[0:4]+"1231"
         #print "Time consume:{}".format(tm2-tm1)
-        return derivData    
+        return thisAcctYear,derivData    
     
 #----------------------------------------------------------------------
 def MyPrint(arg):

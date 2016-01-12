@@ -94,7 +94,7 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
         return None
     v23 = content[0]    
         
-    return rptDate,v11-v21+v12-v22-v13+v23
+    return v11-v21+v12-v22-v13+v23
 
 
 #----------------------------------------------------------------------

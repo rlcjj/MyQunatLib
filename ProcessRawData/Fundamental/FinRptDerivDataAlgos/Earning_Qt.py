@@ -56,10 +56,10 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
           
     if rptMonth == "0331":
         #print rptDate,v1
-        return rptDate,v1
+        return v1
     else:
         #print rptDate,lstRptDate,v1,v2
-        return rptDate,v1-v2
+        return v1-v2
 
 
 #----------------------------------------------------------------------
