@@ -8,7 +8,6 @@
 
 #----------------------------------------------------------------------
 def Calc(cur,acctPeriods,p,s,date,stkCode):
-    """"""
     """
     计算过去12个月CashFlowMargin
     cur:内存数据库cursor
@@ -33,5 +32,5 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
     if content[0]==None:
         return None    
     v = content[0]
-    print v,s,p
+    #print v,s,p
     return v

@@ -9,7 +9,7 @@
 #----------------------------------------------------------------------
 def Calc(cur,lookupDate,rptInfo,stkCode):
     """
-    计算存活
+    计算存货资产
     cur:内存数据库cursor
     lookupDate:查询当日的日期，返回是至该日期最后更新的信息
     lagDays:从lookupDate向前推lagDays天数，之前更新的信息不使用

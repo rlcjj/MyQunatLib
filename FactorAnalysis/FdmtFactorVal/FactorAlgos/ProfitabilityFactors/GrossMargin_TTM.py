@@ -33,5 +33,5 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
     if content[0]==None:
         return None    
     v = content[0]
-    print v,s,p
+    #print v,s,p
     return v

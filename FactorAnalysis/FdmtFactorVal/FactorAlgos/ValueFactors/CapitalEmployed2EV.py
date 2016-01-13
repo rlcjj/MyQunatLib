@@ -35,5 +35,5 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
     v1 = content[0]
     v2 = content[1]
     
-    print v1,v2,s,p
+    #print v1,v2,s,p
     return v1/((s*p*10000.0)+v2)
