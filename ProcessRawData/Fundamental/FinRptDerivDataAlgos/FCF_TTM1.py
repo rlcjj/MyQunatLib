@@ -24,7 +24,7 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     lstSameRptDate = lstYear + rptMonth
     
     sql =  """
-           SELECT NETCFO2
+           SELECT NETCFO
                  -PurchaseFixedAsset
            FROM CashFlowStatement
            WHERE StkCode='{}'

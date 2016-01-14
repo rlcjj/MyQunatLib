@@ -21,6 +21,8 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
            SELECT ifnull(ShtTmBorrow,0) 
                   +ifnull(NotesPayab,0)
                   +ifnull(NonCurLiabWithin1Year,0) 
+                  +ifnull(BorrFromCentralBank,0) 
+                  +ifnull(OtherFinInstituteDeposit,0) 
                   +ifnull(LngTmBorrow,0) 
                   +ifnull(BondPayab,0)
            FROM BalanceSheet
