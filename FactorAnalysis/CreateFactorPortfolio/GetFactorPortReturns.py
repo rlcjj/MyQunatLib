@@ -15,8 +15,8 @@ sys.path.append(root)
 import Tools.GetLocalDatabasePath as GetPath
 import Tools.GetTradeDays as GetTrdDay
 import Tools.Draw as Draw
-import FactorAnalysis.FactorPortfolio.SelectStksByFctVals as SelectStks
-import FactorAnalysis.FactorPortfolio.CalcPortRets as CalcPort
+import FactorAnalysis.CreateFactorPortfolio.SelectStksByFctVals as SelectStks
+import FactorAnalysis.CreateFactorPortfolio.CalcPortRets as CalcPort
 import DefineInvestUniverse.GetIndexCompStocks as IndexCompStks
 
 
@@ -125,7 +125,7 @@ class GetFactorPortReturns(object):
             longPortFile.close()
             
         if plot == 1:
-            Draw.DrawCumulativeReturnCurve(dates,relativeReturns,factorName,"FactorValues\\"+factorName+"\\FactorRetuen.jpeg")
+            Draw.DrawCumulativeReturnCurve(dates,relativeReturns,factorName,"FactorValues\\"+factorName+"\\FactorPortReturn.jpeg")
             
                 
                 

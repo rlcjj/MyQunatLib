@@ -10,7 +10,7 @@ import os,sys,logging ,time,decimal,codecs
 import sqlite3 as lite
 root = os.path.abspath(__file__).split("MyQuantLib")[0]+"MyQuantLib"
 sys.path.append(root)
-import FactorAnalysis.FdmtFactorVal.GetFdmtFactorVal as GetVal
+import FactorAnalysis.CreateFactorPortfolio.GetFactorVal as GetVal
 
 ########################################################################
 class SelectStksByFctVals:
@@ -19,7 +19,7 @@ class SelectStksByFctVals:
     #----------------------------------------------------------------------
     def __init__(self,finRptDataAddr,mktDataAddr):
         """Constructor"""
-        self.getFctVal = GetVal.GetFdmtFactorVal(finRptDataAddr,mktDataAddr)
+        self.getFctVal = GetVal.GetFactorVal(finRptDataAddr,mktDataAddr)
         
             
     #----------------------------------------------------------------------

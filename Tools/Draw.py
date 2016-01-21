@@ -56,7 +56,7 @@ def DrawCumulativeReturnCurve(dates, returns, chartName, path):
     ax.yaxis.set_major_locator(ylocator)
     ax.yaxis.set_minor_locator(y2locator)
     plt.xlim(0,lenOfDays+1)
-    plt.ylim(-max(cumReturns)-0.01, max(cumReturns)+0.01)
+    plt.ylim(min(cumReturns)-0.01, max(cumReturns)+0.01)
     interval = lenOfDays/30
     plt.xticks(x[::interval],dates[::interval],rotation=45, size=6,color='black')
     plt.yticks(size = 8, color='black')

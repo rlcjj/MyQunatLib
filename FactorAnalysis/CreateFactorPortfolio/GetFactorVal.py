@@ -16,7 +16,7 @@ import Tools.GetLocalDatabasePath as GetPath
 
 
 ########################################################################
-class GetFdmtFactorVal(object):
+class GetFactorVal(object):
     """"""
 
     #----------------------------------------------------------------------
