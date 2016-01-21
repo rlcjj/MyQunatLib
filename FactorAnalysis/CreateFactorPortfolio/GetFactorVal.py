@@ -43,7 +43,7 @@ class GetFactorVal(object):
             cur.execute("CREATE TABLE FcstData AS SELECT * FROM FinRpt.ForecastData")
             print "Done"
             print "Load talbe MarketData"
-            cur.execute("CREATE TABLE MktData AS SELECT StkCode,Date,TC,LC FROM MktData.A_Share_Data")
+            cur.execute("CREATE TABLE MktData AS SELECT StkCode,Date,TC,LC,TC_Adj FROM MktData.A_Share_Data")
             print "Done"
             print "Load talbe MarketCap"
             cur.execute("CREATE TABLE MktCap AS SELECT * FROM MktData.MarketCap")
