@@ -19,7 +19,10 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
     
     sql = """
           SELECT CapitalEmployed,
-                 Debt_BearInt1
+                 TotalDebt
+                -Cash
+                +IFNULL(PreferStock,0)
+                +IFNULL(Eqty2Minor,0)
           FROM FinRptDerivData
           WHERE StkCode='{}'
                 AND DeclareDate>='{}'

@@ -10,7 +10,7 @@ import os,sys,logging ,time,decimal,codecs
 import sqlite3 as lite
 import time
 from datetime import datetime,timedelta
-root = os.path.abspath(__file__).split("PyQuantStrategy")[0]+"PyQuantStrategy"
+root = os.path.abspath(__file__).split("MyQuantLib")[0]+"MyQuantLib"
 sys.path.append(root)
 import Tools.GetLocalDatabasePath as GetPath
 import numpy as np
@@ -33,7 +33,7 @@ class CalcPortRets(object):
             locDbPath = GetPath.GetLocalDatabasePath()
             _mktDataDbAddr = locDbPath["RawEquity"]+mktDataDbAddr
             cur.execute("ATTACH '{}' AS MktData".format(_mktDataDbAddr))
-            cur.execute("CREATE TABLE MktData AS SELECT StkCode,Date,LC_Adj,TC_Adj FROM MktData.Price_Volume")
+            cur.execute("CREATE TABLE MktData AS SELECT StkCode,Date,LC_Adj,TC_Adj FROM MktData.A_Share_Data")
             print "Finished"
             cur.execute("CREATE INDEX mId ON MktData (Date,StkCode)")
             print "Finished"    
@@ -45,7 +45,7 @@ class CalcPortRets(object):
         ret = []
         for stk in stkList:
             sql = """
-                  SELECT LC_Adj,TC_Adj
+                  SELECT LC,TC
                   FROM MktData
                   WHERE StkCode='{}'
                   AND Date='{}'

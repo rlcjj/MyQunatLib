@@ -18,8 +18,11 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
     endDate = date[1]
     
     sql = """
-          SELECT EBIT_TTM1,
-                 Debt_BearInt1
+          SELECT EBIT_TTM,
+                 TotalDebt
+                -Cash
+                +IFNULL(PreferStock,0)
+                +IFNULL(Eqty2Minor,0)
           FROM FinRptDerivData
           WHERE StkCode='{}'
                 AND DeclareDate>='{}'

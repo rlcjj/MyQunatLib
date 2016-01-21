@@ -43,7 +43,7 @@ class GetFdmtFactorVal(object):
             cur.execute("CREATE TABLE FcstData AS SELECT * FROM FinRpt.ForecastData")
             print "Done"
             print "Load talbe MarketData"
-            cur.execute("CREATE TABLE MktData AS SELECT StkCode,Date,TC FROM MktData.A_Share_Data")
+            cur.execute("CREATE TABLE MktData AS SELECT StkCode,Date,TC,LC FROM MktData.A_Share_Data")
             print "Done"
             print "Load talbe MarketCap"
             cur.execute("CREATE TABLE MktCap AS SELECT * FROM MktData.MarketCap")
@@ -55,7 +55,7 @@ class GetFdmtFactorVal(object):
             print "Create index on table ForecastData"
             cur.execute("CREATE INDEX fcId ON FcstData (StkCode,DeclareDate)")
             print "Done"
-            print "Crate index on table MarketData"
+            print "Create index on table MarketData"
             cur.execute("CREATE INDEX mId ON MktData (StkCode,Date)")
             print "Done"
             print "Crate index on table MarketCap"

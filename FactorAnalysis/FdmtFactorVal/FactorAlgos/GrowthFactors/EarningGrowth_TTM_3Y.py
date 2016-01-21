@@ -19,7 +19,7 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
     endDate = date[1]
 
     sql = """
-          SELECT (Earning_TTM/Earning_TTM_1Y_Ago+Earning_TTM_1Y_Ago/Earning_TTM_2Y_Ago+Earning_TTM_2Y_Ago/Earning_TTM_3Y_Ago-3)/3
+          SELECT (NetProfits2Parent_TTM/NetProfits2Parent_TTM_1Y_Ago+NetProfits2Parent_TTM_1Y_Ago/NetProfits2Parent_TTM_2Y_Ago+NetProfits2Parent_TTM_2Y_Ago/NetProfits2Parent_TTM_3Y_Ago-3)/3
           FROM FinRptDerivData
           WHERE StkCode='{}'
                 AND DeclareDate>='{}'

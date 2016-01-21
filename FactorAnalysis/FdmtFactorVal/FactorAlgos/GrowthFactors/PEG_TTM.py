@@ -19,7 +19,7 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
     endDate = date[1]
     
     sql = """
-          SELECT Earning_TTM
+          SELECT NetProfits2Parent_TTM
           FROM FinRptDerivData
           WHERE StkCode='{}'
                 AND DeclareDate>='{}'
@@ -48,7 +48,7 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
         return None
     if content[0]==None:
         return None    
-    v2 = content[0]    
+    v2 = content[0]+0.0001   
     
     #print v1,v2,s,p/(v1/s/10000.0),v1/s/10000.0
     return p/(v1/s/10000.0)/v2/100

@@ -19,7 +19,7 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
     endDate = date[1]
 
     sql = """
-          SELECT GrossProfit_TTM/TotalAssets
+          SELECT GrossProfits_TTM*2/(TotalAssets+IFNULL(TotalAssets_1Y_Ago,TotalAssets))
           FROM FinRptDerivData
           WHERE StkCode='{}'
                 AND DeclareDate>='{}'

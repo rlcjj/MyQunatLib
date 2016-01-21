@@ -19,7 +19,7 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
     endDate = date[1]
 
     sql = """
-          SELECT COGS_TTM/Inventory
+          SELECT COGS_TTM*2/(Inventory+IFNULL(Inventory_1Y_Ago,Inventory))
           FROM FinRptDerivData
           WHERE StkCode='{}'
                 AND DeclareDate>='{}'

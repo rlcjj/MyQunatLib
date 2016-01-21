@@ -8,9 +8,9 @@
 
 import os,sys,logging ,time,decimal,codecs
 import sqlite3 as lite
-root = os.path.abspath(__file__).split("PyQuantStrategy")[0]+"PyQuantStrategy"
+root = os.path.abspath(__file__).split("MyQuantLib")[0]+"MyQuantLib"
 sys.path.append(root)
-import FundamentalAnalysis.FdmtFactorVal.GetFdmtFactorVal as GetVal
+import FactorAnalysis.FdmtFactorVal.GetFdmtFactorVal as GetVal
 
 ########################################################################
 class SelectStksByFctVals:
@@ -23,22 +23,29 @@ class SelectStksByFctVals:
         
             
     #----------------------------------------------------------------------
-    def Select(self,date,stkList,algo,ratio):
+    def Select(self,date,stkList,algo,ratio,seq):
         """"""
         numOfStks = len(stkList)
         numSelected = int(ratio*numOfStks)
         
         stkFctVal = {}
         sortedStk = []
+        port = {}
         for stk in stkList:
             v = self.getFctVal.GetVal(date,180,stk,algo)
-            if v!=None:
-                stkFctVal[stk] = v
+            if v[0]!=None:
+                stkFctVal[stk] = v[0]
         for _stk in sorted(stkFctVal, key=stkFctVal.get, reverse=True):
             #print _stk, stkFctVal
             sortedStk.append(_stk)
-        
-        return sortedStk[0:numSelected],sortedStk[-numSelected:],stkFctVal
+        #print sortedStk[0],stkFctVal[sortedStk[0]],sortedStk[-1],stkFctVal[sortedStk[-1]]
+        if seq == 1:
+            port["long"] = sortedStk[0:numSelected]
+            port["short"] = sortedStk[-numSelected:]
+        else:
+            port["long"] = sortedStk[-numSelected:]
+            port["short"] = sortedStk[0:numSelected]
+        return port,stkFctVal
         
         
         

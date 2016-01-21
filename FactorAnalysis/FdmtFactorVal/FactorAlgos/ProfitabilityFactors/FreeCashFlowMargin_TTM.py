@@ -19,7 +19,7 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
     endDate = date[1]
     
     sql = """
-          SELECT FCF_TTM1/Sales_TTM
+          SELECT FCF_TTM/Sales_TTM
           FROM FinRptDerivData
           WHERE StkCode='{}'
                 AND DeclareDate>='{}'

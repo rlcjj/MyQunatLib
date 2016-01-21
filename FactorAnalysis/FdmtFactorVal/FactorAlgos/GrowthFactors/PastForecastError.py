@@ -19,7 +19,7 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
     endDate = date[1]
     
     sql = """
-          SELECT AcctPeriod,Earning
+          SELECT AcctPeriod,NetProfits2Parent
           FROM FinRptDerivData
           WHERE StkCode='{}'
                 AND SUBSTR(AcctPeriod,5,4)='1231'

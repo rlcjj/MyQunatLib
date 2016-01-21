@@ -19,7 +19,7 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
     endDate = date[1]
     
     sql = """
-          SELECT BookValue
+          SELECT Eqty2Parent
           FROM FinRptDerivData
           WHERE StkCode='{}'
                 AND DeclareDate>='{}'
