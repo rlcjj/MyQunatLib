@@ -10,9 +10,8 @@ import numpy as np
 
 #----------------------------------------------------------------------
 def Calc(cur,acctPeriods,p,s,date,stkCode):
-    """"""
     """
-    计算180天收益 
+    计算60天价格动量 
     cur:内存数据库cursor
     date:查询当日的日期和数据有效的最早日期
     stkCode：股票代码
@@ -25,13 +24,13 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
           FROM MktData
           WHERE StkCode='{}'
                 AND Date<='{}'
-          ORDER BY Date DESC LIMIT 180
+          ORDER BY Date DESC LIMIT 80
           """
     cur.execute(sql.format(stkCode,endDate))
     content = cur.fetchall()
     if content==[]:
         return None
-    if len(content)<20:
+    if len(content)<80:
         return None
     if content[-1][0]==None or content[0][0]==None or content[20][0]==None:
         return None

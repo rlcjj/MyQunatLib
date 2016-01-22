@@ -10,7 +10,7 @@ import os,sys,logging ,time,decimal,codecs
 import sqlite3 as lite
 root = os.path.abspath(__file__).split("MyQuantLib")[0]+"MyQuantLib"
 sys.path.append(root)
-import FactorAnalysis.CreateFactorPortfolio.GetFactorVal as GetVal
+import FactorAnalysis.TestRawFactorPortfolio.GetFactorVal as GetVal
 
 ########################################################################
 class SelectStksByFctVals:
@@ -33,8 +33,9 @@ class SelectStksByFctVals:
         port = {}
         for stk in stkList:
             v = self.getFctVal.GetVal(date,180,stk,algo)
-            if v[0]!=None:
-                stkFctVal[stk] = v[0]
+            if v!=None:
+                if v[0]!=None:
+                    stkFctVal[stk] = v[0]
         for _stk in sorted(stkFctVal, key=stkFctVal.get, reverse=True):
             #print _stk, stkFctVal
             sortedStk.append(_stk)

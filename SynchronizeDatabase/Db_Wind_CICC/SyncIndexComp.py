@@ -8,12 +8,12 @@
 
 import os,sys,logging ,time,decimal,codecs
 from ConfigParser import ConfigParser
-root = os.path.abspath(__file__).split("PyQuantStrategy")[0]+"PyQuantStrategy"
+root = os.path.abspath(__file__).split("MyQuantLib")[0]+"MyQuantLib"
 sys.path.append(root)
 
 import os,sys,logging
 from ConfigParser import ConfigParser
-root = os.path.abspath(__file__).split("PyQuantStrategy")[0]+"PyQuantStrategy"
+root = os.path.abspath(__file__).split("MyQuantLib")[0]+"MyQuantLib"
 sys.path.append(root)
 import SynchronizeDatabase.SyncDb as Sync
 

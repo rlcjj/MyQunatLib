@@ -15,8 +15,8 @@ sys.path.append(root)
 import Tools.GetLocalDatabasePath as GetPath
 import Tools.GetTradeDays as GetTrdDay
 import Tools.Draw as Draw
-import FactorAnalysis.CreateFactorPortfolio.SelectStksByFctVals as SelectStks
-import FactorAnalysis.CreateFactorPortfolio.CalcPortRets as CalcPort
+import FactorAnalysis.TestRawFactorPortfolio.SelectStksByFctVals as SelectStks
+import FactorAnalysis.TestRawFactorPortfolio.CalcPortRets as CalcPort
 import DefineInvestUniverse.GetIndexCompStocks as IndexCompStks
 
 
@@ -112,7 +112,7 @@ class GetFactorPortReturns(object):
                     if factorVals[i].has_key(stk):
                         factValFile.write(','+repr(factorVals[i][stk]))
                     else:
-                        factValFile.write(', Exclude')
+                        factValFile.write(', None')
                 factValFile.write("\n")
             factValFile.close()
             
