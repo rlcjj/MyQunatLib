@@ -33,7 +33,7 @@ class ConsolidateData(object):
         """"""
         self.indexCode = indexCode
         self.compStks = CompStks.GetIndexCompStocks(dbAddress)
-        self.indexAdjDate = self.compStks. GetIndexAdjustDate(indexCode)        
+        self.indexAdjDate = self.compStks.GetIndexAdjustDate(indexCode)        
 
 
     #----------------------------------------------------------------------
@@ -67,7 +67,10 @@ class ConsolidateData(object):
         cur.execute("""
                     CREATE TABLE FinRptDerivData(StkCode TEXT,
                                                  AcctPeriod TEXT,
-                                                 DeclareDate TEXT
+                                                 DeclareDate TEXT,
+                                                 ReportType INT,
+                                                 IsNewAcctRule INT,
+                                                 IsListed INT
                                                  {})
                     """.format(sqlStr))
         sqlStr = ""
@@ -88,22 +91,22 @@ class ConsolidateData(object):
         finRptDbPath = self.locDbPath["RawEquity"]+"FinRptData\\FinRptData_Wind_CICC.db"
         mktDataDbPath = self.locDbPath["RawEquity"]+"MktData\\MktData_Wind_CICC.db"
         fdmtData = FdmtData.GetFdmtDerivData(finRptDbPath,mktDataDbPath)
-        allStks = self.compStks.GetAllStocks('000300')
+        allStks = self.compStks.GetAllStocks(self.indexCode)
         
         cur = self.indicConn.cursor()
         lenOfItems = len(self.items1)
-        insertSql = "?,?,?"+lenOfItems*",?"
+        insertSql = "?,?,?,?,?,?"+lenOfItems*",?"
         for stk in allStks:
             print stk
-            date = self.compStks.GetIncludeAndExcludeDate(stk,'000300')
+            date = self.compStks.GetIncludeAndExcludeDate(stk,self.indexCode)
             begDate = date[0][0]
             endDate = date[-1][1]
             rptDeclareDate = fdmtData.GetFinDataDeclareDate(stk,begDate,endDate)
             for dt in rptDeclareDate:
                 itemVals = fdmtData.CalcFinRptDerivData(dt,300,stk,self.items1)
                 if itemVals!=None:
-                    row = [stk,itemVals[0],dt]
-                    for itemVal in itemVals[1]:
+                    row = [stk,itemVals[0],dt,itemVals[1],itemVals[2],itemVals[3]]
+                    for itemVal in itemVals[4]:
                         row.append(itemVal)
                     cur.execute("INSERT INTO FinRptDerivData VALUES ({})".format(insertSql),tuple(row))
         self.indicConn.commit()
@@ -113,7 +116,7 @@ class ConsolidateData(object):
         insertSql = "?,?,?"+lenOfItems*",?"
         for stk in allStks:
             print stk
-            date = self.compStks.GetIncludeAndExcludeDate(stk,'000300')
+            date = self.compStks.GetIncludeAndExcludeDate(stk,self.indexCode)
             begDate = date[0][0]
             endDate = date[-1][1]
             rptDeclareDate = fdmtData.GetForecastDataDeclareDate(stk,begDate,endDate)

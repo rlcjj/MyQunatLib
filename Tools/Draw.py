@@ -45,29 +45,29 @@ def DrawCumulativeReturnCurve(dates, returns, chartName, path):
     #RollingSum20 = RollingApply(sum, returns, lookbackWindow1)
     #RollingSum30 = RollingApply(sum, returns, lookbackWindow2)
 
-    fig  = plt.figure(num=None, figsize=None, dpi=100, facecolor=None, 
+    fig  = plt.figure(num=None, figsize=(16,8), dpi=100, facecolor=None, 
                       edgecolor=None, frameon=True)
     ax = fig.add_subplot(111)
-    ax.set_axis_bgcolor('lightyellow')
+    ax.set_axis_bgcolor('lightgoldenrodyellow')
     #xlocator = MultipleLocator(1)
-    ylocator = MultipleLocator(0.1)
-    y2locator = MultipleLocator(0.01)
+    ylocator = MultipleLocator(0.05)
+    #y2locator = MultipleLocator(0.01)
     #ax.xaxis.set_minor_locator(xlocator)
     ax.yaxis.set_major_locator(ylocator)
-    ax.yaxis.set_minor_locator(y2locator)
+    #ax.yaxis.set_minor_locator(y2locator)
     plt.xlim(0,lenOfDays+1)
     plt.ylim(min(cumReturns)-0.01, max(cumReturns)+0.01)
     interval = lenOfDays/30
-    plt.xticks(x[::interval],dates[::interval],rotation=45, size=6,color='black')
+    plt.xticks(x[::interval],dates[::interval],rotation=90, size=6,color='black')
     plt.yticks(size = 8, color='black')
-    plt.xlabel('$Date$',color='r',size = 10)
-    plt.ylabel('$Cumulative Returns$', color='red',size = 10)
+    plt.xlabel('Date',color='black',size = 10)
+    plt.ylabel('Cumulative Returns', color='black',size = 10)
     plt.title(chartName, color = 'black',fontweight="bold")
     plt.text(int(x[-1]*0.8),max(cumReturns)+0.3 , '$r=$%6.2f%%\n$\sigma=$%6.2f%%\n$sr=$%6.2f'
-             %(annRet*100,annVol*100,sharpeRatio),fontsize = 10, color='r',fontweight="bold")
-    plt.grid()
+             %(annRet*100,annVol*100,sharpeRatio),fontsize = 10, color='black',fontweight="bold")
+    plt.grid(b=True, which='both')
 
-    plt.plot(cumReturns, label='CumRets', color = 'red')
+    plt.plot(cumReturns, label='Cumulative Return', color = 'blue',linewidth=0.5)
     #plt.plot(RollingSum20, label='RollingSum60', color = 'cyan')
     #plt.plot(RollingSum30, label='RollingSum250', color = 'pink')
     #plt.plot(numpy.zeros(lenOfDays),color='black',linestyle='.')
@@ -84,11 +84,11 @@ def DrawCumulativeReturnCurve(dates, returns, chartName, path):
             kk = ii
     b=k
     bb=kk
-    plt.plot([bb,bb],[cumReturns[b],cumReturns[bb]],color='g',linestyle='-.',linewidth=1)
-    plt.plot([bb,b],[cumReturns[b],cumReturns[b]],color='g',linestyle='-.',linewidth=1)
-    plt.scatter(bb, cumReturns[bb], s=30, c='b', marker='x',color='g')
-    plt.scatter(b, cumReturns[b], s=30, c='b', marker='x',color='g')
-    plt.text(bb,cumReturns[b],'$mdd=$%6.2f%%'%(mdd*100),fontsize=10,color='r',fontweight="bold")
+    plt.plot([bb,bb],[cumReturns[b],cumReturns[bb]],color='r',linestyle='-.',linewidth=1)
+    plt.plot([bb,b],[cumReturns[b],cumReturns[b]],color='r',linestyle='-.',linewidth=1)
+    plt.scatter(bb, cumReturns[bb], s=30, c='b', marker='x',color='r')
+    plt.scatter(b, cumReturns[b], s=30, c='b', marker='x',color='r')
+    plt.text(bb,cumReturns[b],'$mdd=$%6.2f%%'%(mdd*100),fontsize=10,color='black')
     #plt.show()
     plt.savefig(path,dpi=100,format="jpeg")
     plt.close(fig)    

@@ -134,15 +134,13 @@ class GetFdmtDerivData(object):
         tm2 = time.time()
         
         #print "Time consume:{}".format(tm2-tm1)
-        return content[0],derivData
+        return rptInfo[0],rptInfo[1],rptInfo[2],rptInfo[3],derivData
     
     #----------------------------------------------------------------------
     def CalcForecastDerivData(self,lookupDate,lagDays,stkCode,algos):
         """"""
         tm1 = time.time()
-        
         cur = self.conn.cursor()
-
         derivData = []
         for algo in algos:
             _derivData = algo.Calc(cur,lookupDate,"",stkCode)

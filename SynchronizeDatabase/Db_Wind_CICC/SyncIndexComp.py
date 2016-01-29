@@ -70,7 +70,9 @@ class SyncData(Sync.SyncDb):
             #print "INSERT OR IGNORE INTO {} VALUES {})".format(tb[0],str(row))
             curW.execute("INSERT OR IGNORE INTO {} VALUES (?{})".format(tb[1],',?'*(len(row)-1))
                         ,row)
-        self.locConn.commit()        
+        self.locConn.commit()
+        curW.execute("Create Index {} On {}(StkCode)".format("Ind"+tb[1],tb[1]))
+        self.locConn.commit()
     
         
         

@@ -8,7 +8,7 @@
 
 import os,sys,logging ,time,decimal,codecs
 import sqlite3 as lite
-root = os.path.abspath(__file__).split("PyQuantStrategy")[0]+"PyQuantStrategy"
+root = os.path.abspath(__file__).split("MyQuantLib")[0]+"MyQuantLib"
 sys.path.append(root)
 import Tools.GetLocalDatabasePath as GetPath
 
@@ -22,8 +22,18 @@ class GetIndexCompStocks(object):
         """Constructor"""
         locDbPath = GetPath.GetLocalDatabasePath()
         lite.register_adapter(decimal.Decimal, lambda x:str(x))
-        self.conn = lite.connect(locDbPath["RawEquity"]+dbAddress)
+        self.conn = lite.connect(":memory:")
+        cur = self.conn.cursor()
         self.conn.text_factory = str
+        cur.execute("ATTACH '{}' AS _IndexComp".format(locDbPath["RawEquity"]+dbAddress))
+        print "Load table IndexComp"
+        cur.execute("CREATE TABLE IndexComp AS SELECT * FROM _IndexComp.IndexComp")
+        print "Load table SWIndustry1st"
+        cur.execute("CREATE TABLE SWIndustry1st AS SELECT * FROM _IndexComp.SWIndustry1st")        
+        print "Create index on IndexComp"
+        cur.execute("CREATE INDEX idI ON IndexComp (IndexCode,IncDate,ExcDate,StkCode)")
+        print "Create index on SWIndustry1st"
+        cur.execute("CREATE INDEX idS ON SWIndustry1st (IndusCode,IncDate,ExcDate,StkCode)")
         
     #----------------------------------------------------------------------
     def GetStocks(self,date,*indexCode):
@@ -113,3 +123,18 @@ class GetIndexCompStocks(object):
             return date
         else:
             return None
+        
+    #----------------------------------------------------------------------
+    def GetStockNameAndIndustry(self,stkCode,date):
+        """"""
+        cur = self.conn.cursor()
+        sql = """
+              SELECT StkName,IndusCode,IndusName
+              FROM SWIndustry1st
+              WHERE StkCode='{}'
+              AND IncDate<='{}'
+              AND (ExcDate ISNULL or ExcDate>='{}')
+              """
+        cur.execute(sql.format(stkCode,date,date))
+        row = cur.fetchone()
+        return row
