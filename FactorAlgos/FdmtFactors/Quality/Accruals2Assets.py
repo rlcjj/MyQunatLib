@@ -3,14 +3,14 @@
 """
   Author:  Wusf --<wushifan221@gmail.com>
   Purpose: 
-  Created: 2016/1/18
+  Created: 2016/2/2
 """
 
 #----------------------------------------------------------------------
 def Calc(cur,acctPeriods,p,s,date,stkCode):
     """"""
     """
-    计算过去12个月ROA
+    计算当期 Accruals/TotalAssets
     cur:内存数据库cursor
     date:查询当日的日期和数据有效的最早日期
     stkCode：股票代码
@@ -19,7 +19,7 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
     endDate = date[1]
 
     sql = """
-          SELECT Accruals_TTM*2/(TotalAssets+TotalAssets_1Y_Ago)
+          SELECT Accruals/TotalAssets
           FROM FinRptDerivData
           WHERE StkCode='{}'
                 AND DeclareDate>='{}'

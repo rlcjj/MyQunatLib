@@ -24,8 +24,7 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     lstSameRptDate = lstYear + rptMonth
     
     sql =  """
-           SELECT TotCurAssets
-                 -TotCurLiab
+           SELECT Invt+AcctRcvbl-AcctPayab
            FROM BalanceSheet
            WHERE StkCode='{}'
            AND RPT_DATE='{}'

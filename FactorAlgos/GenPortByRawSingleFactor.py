@@ -62,10 +62,13 @@ class GetFactorPortReturns(object):
         
     
     #----------------------------------------------------------------------
-    def SortStocksByFactor(self,date,stkUniverse,factorName,ifZScore,order,execludeIndus):
+    def SortStocksByFactor(self,date,InHS300,factorName,tableName,order,excludeIndus,):
         """"""
         cur = self.conn2.cursor()
-        cur.execute("SELECT StkCode,{} FROM {} WHERE Date='{}' AND IndusCode NOT IN ({}) ORDER BY {} {}".format(factorName,ifZScore,date,execludeIndus,factorName,order))
+        cur.execute("""SELECT StkCode,{} 
+                       FROM {} 
+                       WHERE InHS300 IN ({}) AND Date='{}' AND ReportType NOT IN ({}) 
+                       ORDER BY {} {}""".format(factorName,tableName,InHS300,date,excludeIndus,factorName,order))
         rows = cur.fetchall()
         totalStks = []
         sortedStks = []
@@ -76,30 +79,40 @@ class GetFactorPortReturns(object):
         return totalStks,sortedStks
     
     #----------------------------------------------------------------------
-    def CalcLongMinusBenchMarkReturns(self,factorName,ifZScore,excludeIndus,percentile,order,plot=1):
+    def CalcLongMinusBenchMarkReturns(self,factorName,tableName,InHS300,excludeIndus,percentile,order,plotPath,plot=1):
         """"""
         dates = []
         relativeReturns = []
+        benchMarkReturns = []
         longPort = []
         shortPort = []
+        #benchMarkPort = []
         for dt in self.trdDays:
             if dt in self.revalueDays:
-                stks = self.SortStocksByFactor(dt, factorName,ifZScore,order,excludeIndus)
+                stks = self.SortStocksByFactor(dt,InHS300,factorName,tableName,order,excludeIndus)
                 numStk = int(len(stks[0])*percentile)
                 print dt,len(stks[0]),len(stks[1])
-                if len(stks[1])>=0.6*len(stks[0]):
+                if len(stks[1])>=0.4*len(stks[0]):
                     longPort = stks[1][0:numStk]
                     shortPort = stks[1][-numStk:]
+                benchMarkPort = stks[0]
             longRet = self.calcPortRet.Calc(dt,longPort)
             shortRet = self.calcPortRet.Calc(dt,shortPort)
+            benchmarkRet = self.calcPortRet.Calc(dt,benchMarkPort)
             ret = longRet-shortRet
             dates.append(dt)
             relativeReturns.append(ret)
+            benchMarkReturns.append(benchmarkRet)
             #print dt,ret     
-        
+        if InHS300 == "1":
+            univer = "(Stock universe: hs300)"
+        elif InHS300 == "0":
+            univer = "(Stock universe: zz500)"
+        elif InHS300 == "0,1":
+            univer = "(Stock universe: zz800)"
             
         if plot == 1:
-            Draw.DrawCumulativeReturnCurve(dates,relativeReturns,factorName,factorName+"FactorPortReturn.jpeg")
+            Draw.DrawCumulativeReturnCurve(dates,relativeReturns,factorName+'_'+univer,plotPath+"\\"+factorName+"FactorPortReturn.jpeg",benchMarkReturns)
             
                 
         
@@ -107,5 +120,5 @@ if __name__ == "__main__":
     dbPath1 = "Factor_399906_20D.db"
     dbPath2 = "MktData\\MktData_Wind_CICC.db"   
     portReturns = GetFactorPortReturns(dbPath1,dbPath2,"20151231")
-    portReturns.CalcLongMinusBenchMarkReturns("CapitalEmployed2EV","FactorVals","801780,801190,801790",0.2,"DESC")
+    portReturns.CalcLongMinusBenchMarkReturns("B2P","FactorVals","0","2",0.2,"DESC","Plot_ZZ500")
     

@@ -40,9 +40,10 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
           FROM FcstData
           WHERE StkCode='{}'
               AND AcctPeriod='{}'
+              AND DeclareDate<='{}'
           ORDER BY DeclareDate DESC LIMIT 1
           """
-    cur.execute(sql.format(stkCode,d))
+    cur.execute(sql.format(stkCode,d,d[0:4]+endDate[4:]))
     content = cur.fetchone()
     if content==None:
         return None

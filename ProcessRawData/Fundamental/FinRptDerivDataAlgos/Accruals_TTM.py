@@ -23,7 +23,7 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     lstSameRptDate = lstYear + rptMonth
     
     sql = """
-           SELECT NetProfits
+           SELECT NetProfitsToParent
            FROM IncomeStatement
            WHERE StkCode='{}'
            AND RPT_DATE='{}'

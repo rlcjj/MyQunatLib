@@ -8,7 +8,6 @@
 
 #----------------------------------------------------------------------
 def Calc(cur,acctPeriods,p,s,date,stkCode):
-    """"""
     """
     计算过去12个月Retrun on operating assets
     cur:内存数据库cursor

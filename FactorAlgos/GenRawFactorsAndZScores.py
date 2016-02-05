@@ -137,6 +137,7 @@ class GenRawFactorsAndZScoresDatabase(object):
         tm1 = time.time()
         conf = ConfigParser()
         conf.read(configPath)
+        print conf.sections()
         indusList = conf.items(classification)
         conn = lite.connect(self.procDbPath+self.fctDbName+".db")
         conn.text_factory = str
@@ -166,8 +167,8 @@ class GenRawFactorsAndZScoresDatabase(object):
                     _mat = []
                     stkInfo = []
                     for row in rows:
-                        stkInfo.append(row[0:5])
-                        _mat.append(row[5:])
+                        stkInfo.append(row[0:8])
+                        _mat.append(row[8:])
                     mat = numpy.array(_mat,dtype=numpy.float)
                     #print date,indus[0]
 

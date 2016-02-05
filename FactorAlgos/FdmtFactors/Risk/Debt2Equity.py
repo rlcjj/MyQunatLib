@@ -8,7 +8,6 @@
 
 #----------------------------------------------------------------------
 def Calc(cur,acctPeriods,p,s,date,stkCode):
-    """"""
     """
     计算Debt/Equity
     cur:内存数据库cursor
