@@ -78,8 +78,8 @@ class GetIndexCompStocks(object):
         stks = []
         for row in rows:
             stks.append(row[0])
-        return stks        
-        
+        return stks      
+          
             
     #----------------------------------------------------------------------
     def GetIndexAdjustDate(self,*indexCode):

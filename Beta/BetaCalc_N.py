@@ -13,6 +13,7 @@ from datetime import datetime,timedelta
 root = os.path.abspath(__file__).split("MyQuantLib")[0]+"MyQuantLib"
 sys.path.append(root)
 import Tools.GetLocalDatabasePath as GetPath
+import pandas as pd
 
 
 ########################################################################
@@ -45,39 +46,39 @@ class BetaCalc(object):
     #----------------------------------------------------------------------
     def SetParameters(self,marketIndex,stockUniverse,returnHorizon,lookbackWindow):
         """"""
+        self.marketIndex = marketIndex
+        self.colName = [marketIndex]
+        for stkName in stockUniverse:
+            self.colName.append(stkName)
         self.mktIndex = marketIndex
         self.returnHorizon = returnHorizon
         self.lookbackWindow = lookbackWindow
         cur = self.conn.cursor()
-        
+        cur.execute("PRAGMA synchronous=OFF")
         sql = """
-              CREATE VIEW TBView AS SELECT Ind.Date,Ind.TC 
+              CREATE TABLE DATA
+              AS SELECT Date,TC FROM IndexData 
+              WHERE IndexData.StkCode='{}'
               """
+        cur.execute(sql.format(marketIndex))
         for stk in stockUniverse:
-            _sql = ",'{}'.TC_Adj".format(stk)
-            sql+=_sql
-        _sql = """
-               FROM
-               (SELECT Date,TC
-                      FROM IndexData 
-                      WHERE StkCode='{}')Ind
-               """.format(marketIndex)
-        sql+=_sql
-        for stk in stockUniverse:
-            _sql = """
-                   LEFT JOIN (SELECT TC_Adj,Date 
-                              FROM StockData
-                              WHERE StkCode='{}')'{}'
-                   ON '{}'.Date=Ind.Date
-                   """.format(stk,stk,stk)
-            sql += _sql
-        cur.execute(sql)
-        cur.execute("""
-                    CREATE TABLE DATA AS SELECT * FROM TBView
-                    """)
-        cur.execute("""
-                    CREATE INDEX _id ON DATA (Date)
-                    """)
+            sql1 = """
+                   ALTER TABLE DATA ADD COLUMN '{}' FLOAT;
+                   """
+            cur.execute(sql1.format(stk))
+            print stk
+        for stk in stockUniverse: 
+            sql2 = """
+                   UPDATE DATA
+                   SET '{}'=(SELECT TC_Adj
+                             FROM StockData
+                             WHERE DATA.Date=StockData.Date
+                             AND StockData.StkCode='{}')
+                   """
+            cur.execute(sql2.format(stk,stk))
+            print stk
+        print "Start"
+       
 
         
     #----------------------------------------------------------------------
@@ -92,30 +93,36 @@ class BetaCalc(object):
                     ORDER BY Date DESC LIMIT {}
                     """.format(date,self.lookbackWindow+1))
         vals = cur.fetchall()
+        dt = numpy.array(vals)
+        df = pd.DataFrame(dt[:,1:].astype(numpy.float),index=dt[:,0],columns=self.colName)
+        dfRet = numpy.log(df/df.shift(-1))
         tm2 = time.time()
-        print tm2-tm1        
-        _tc = []
-        if len(vals)<self.lookbackWindow+1:
-            beta = numpy.nan   
-        else:
-            for v in vals:
-                print v
-        #        _tc.append([float(v[1]),float(v[2])])#
-        #    tc = numpy.array(_tc)
-        #    tce = numpy.log(tc[0::self.returnHorizon])
-        #    rets = -numpy.diff(tce,1,0)
-        #    sigma = numpy.var(rets)[0,0]
-        #print rets      
-        #tm2 = time.time()
-        #print tm2-tm1            
-
+        print tm2-tm1
+        betaDict = {}
+        for stk in self.colName[1:]:
+            dffRet = dfRet[[self.marketIndex,stk]]
+            covMat = dffRet.cov().values
+            _cov = covMat[0,1]
+            _var = covMat[0,0]
+            beta = covMat[0,1]/covMat[0,0]
+            betaDict[stk] = beta
+            print stk,beta
+        print betaDict
+            
+        
+        
+        
+        
             
   
+import DefineInvestUniverse.GetIndexCompStocks as CompStks            
             
-            
-if __name__ == "__main__":
+if __name__ == "__main__":    
+    dbAddress = "MktGenInfo\\IndexComp_Wind_CICC.db"
+    compStks = CompStks.GetIndexCompStocks(dbAddress)
+    allStks = compStks.GetAllStocks('000300')
     betaCalc = BetaCalc("MktData\\MktData_Wind_CICC.db", 1,"20100127")
-    betaCalc.SetParameters("000300",["600837","600031"],2,250)
+    betaCalc.SetParameters("000300",allStks,2,250)
     betaCalc.Calc("20160128","600837")
         
         
