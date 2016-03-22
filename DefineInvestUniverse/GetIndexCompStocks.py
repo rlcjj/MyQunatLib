@@ -60,20 +60,21 @@ class GetIndexCompStocks(object):
     
     
     #----------------------------------------------------------------------
-    def GetAllStocks(self,*indexCode):
+    def GetAllStocks(self,startDate,*indexCode):
         """"""
         cur = self.conn.cursor()
         sql = """
                   SELECT DISTINCT StkCode
                   FROM IndexComp
                   WHERE IndexCode in {}
+                  AND (ExcDate>'{}' OR ExcDate IS NULL)
                   """
         _indexCode = []
         for item in indexCode:
             _indexCode.append(item)
         _indexCode.append("None")
         #print sql.format(tuple(_indexCode))
-        cur.execute(sql.format(tuple(_indexCode)))
+        cur.execute(sql.format(tuple(_indexCode),startDate))
         rows = cur.fetchall()
         stks = []
         for row in rows:

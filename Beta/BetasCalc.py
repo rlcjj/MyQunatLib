@@ -30,7 +30,7 @@ class BetaCalc(object):
             cur = self.conn.cursor()
             print "Load market data into memory database"
             cur.execute("ATTACH '{}' AS MktData".format(mktDbPath))
-            cur.execute("CREATE TABLE StockData AS SELECT StkCode,Date,TC_Adj FROM MktData.A_Share_Data WHERE Date>='{}'".format(startDate))
+            cur.execute("CREATE TABLE StockData AS SELECT StkCode,Date,TC_Adj,Statu FROM MktData.A_Share_Data WHERE Date>='{}'".format(startDate))
             cur.execute("CREATE TABLE IndexData AS SELECT StkCode,Date,TC FROM MktData.IndexData WHERE Date>='{}'".format(startDate))
             print "Done"
             print "Create index on table StockData and table IndexData"
@@ -46,62 +46,45 @@ class BetaCalc(object):
     #----------------------------------------------------------------------
     def SetParameters(self,marketIndex,stockUniverse,returnHorizon,lookbackWindow):
         """"""
-        self.marketIndex = marketIndex
-        self.colName = [marketIndex]
-        for stkName in stockUniverse:
-            self.colName.append(stkName)
-        self.mktIndex = marketIndex
-        self.returnHorizon = returnHorizon
         self.lookbackWindow = lookbackWindow
+        self.marketIndex = marketIndex
         cur = self.conn.cursor()
-        cur.execute("PRAGMA synchronous=OFF")
-        sql = """
-              CREATE TABLE DATA
-              AS SELECT Date,TC FROM IndexData 
-              WHERE IndexData.StkCode='{}'
-              """
-        cur.execute(sql.format(marketIndex))
+        
+        cur.execute("SELECT Date,TC FROM IndexData WHERE StkCode='{}'".format(marketIndex))
+        vals=cur.fetchall()
+        dt = numpy.array(vals)
+        dfi = pd.DataFrame(dt[:,1].astype(numpy.float),index=dt[:,0],columns=[marketIndex])
+        dfList = [dfi]
         for stk in stockUniverse:
-            sql1 = """
-                   ALTER TABLE DATA ADD COLUMN '{}' FLOAT;
-                   """
-            cur.execute(sql1.format(stk))
-            print stk
-        for stk in stockUniverse: 
-            sql2 = """
-                   UPDATE DATA
-                   SET '{}'=(SELECT TC_Adj
-                             FROM StockData
-                             WHERE DATA.Date=StockData.Date
-                             AND StockData.StkCode='{}')
-                   """
-            cur.execute(sql2.format(stk,stk))
-            print stk
-        print "Start"
-       
+            
+            cur.execute("SELECT Date,(CASE WHEN Statu=-1 THEN TC_Adj ELSE Null END) FROM StockData WHERE StkCode='{}'".format(stk))
+            vals=cur.fetchall()
+            if len(vals)>0:
+                dt = numpy.array(vals)
+                #print stk
+                dfs = pd.DataFrame(dt[:,1].astype(numpy.float),index=dt[:,0],columns=[stk])     
+                dfList.append(dfs)
+            
+        self.df = pd.concat(dfList,axis=1)
+        self.trdDay = self.df.index
+        self.df = self.df[::returnHorizon]
+        self.retDf = numpy.log(self.df/self.df.shift(1))
 
         
     #----------------------------------------------------------------------
-    def Calc(self,date,stock):
+    def Calc(self,date):
         """"""
-        tm1 = time.time()
-        cur = self.conn.cursor()
-        cur.execute("""
-                    SELECT *
-                    FROM DATA
-                    WHERE Date<='{}'
-                    ORDER BY Date DESC LIMIT {}
-                    """.format(date,self.lookbackWindow+1))
-        vals = cur.fetchall()
-        dt = numpy.array(vals)
-        df = pd.DataFrame(dt[:,1:].astype(numpy.float),index=dt[:,0],columns=self.colName)
-        dfRet = numpy.log(df/df.shift(-1))
-        tm2 = time.time()
-        print tm2-tm1
+        pos = self.trdDay.tolist().index(date)
+        print pos
+        startDate = self.trdDay[pos-self.lookbackWindow]
+        print startDate
+        dfRet = self.retDf[(self.retDf.index>=startDate)*(self.retDf.index<=date)]
+        effectiveNum = int(len(dfRet.index)*0.6)
+        print dfRet
         betaDict = {}
-        for stk in self.colName[1:]:
+        for stk in dfRet.columns:
             dffRet = dfRet[[self.marketIndex,stk]]
-            covMat = dffRet.cov().values
+            covMat = dffRet.cov(effectiveNum).values
             _cov = covMat[0,1]
             _var = covMat[0,0]
             beta = covMat[0,1]/covMat[0,0]
@@ -122,8 +105,8 @@ if __name__ == "__main__":
     compStks = CompStks.GetIndexCompStocks(dbAddress)
     allStks = compStks.GetAllStocks('000300')
     betaCalc = BetaCalc("MktData\\MktData_Wind_CICC.db", 1,"20100127")
-    betaCalc.SetParameters("000300",allStks,2,250)
-    betaCalc.Calc("20160128","600837")
+    betaCalc.SetParameters("000300",allStks,5,250)
+    betaCalc.Calc("20160128")
         
         
             

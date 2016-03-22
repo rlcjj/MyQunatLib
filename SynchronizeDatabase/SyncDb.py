@@ -275,6 +275,7 @@ class SyncDb(object):
         if replace==1:
             for tb in self.tables:
                 self.locConn.execute("DROP TABLE IF EXISTS %s"%tb[1])
+                self.locConn.execute("DROP INDEX IF EXISTS %sINDEX"%tb[1])
                 self._CreateLocalTable(tb)
                 self._UpdateLocalTable(tb)
         else:

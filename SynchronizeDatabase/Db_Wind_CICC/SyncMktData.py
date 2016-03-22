@@ -106,6 +106,10 @@ class SyncData(Sync.SyncDb):
             self.locConn.commit()
             tm6=time.time()
             self.logger.info("Read time:{}, fetch time:{}, write time:{}".format(tm2-tm1,tm4-tm3,tm6-tm5))
+        self.logger.info("Creating index...")
+        curW.execute("CREATE INDEX {}INDEX ON {} (StkCode,Date)".format(tb[1],tb[1]))
+        self.locConn.commit()
+        self.logger.info("Finished!")
 
 
 
