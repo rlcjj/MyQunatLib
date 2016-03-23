@@ -83,7 +83,7 @@ class PCA_For_Stat_Arb(object):
         self.retDf2 = self.df.pct_change()
         self.logPriceDf = numpy.log(self.df)
         self.retDf = self.logPriceDf.diff()
-        self.retDf = self.retDf.fillna(0)
+        #self.retDf = self.retDf.fillna(0)
         
     #----------------------------------------------------------------------
     def GenEigenPort(self,date,v,percentage,nSampleDate,outlier):
@@ -95,8 +95,7 @@ class PCA_For_Stat_Arb(object):
             print "Not enough sample data for PCA, quit program"
             return None
         dfRet = self.retDf[(self.retDf.index>=startDate)*(self.retDf.index<=date)]
-        dfRet = dfRet.loc[dfRet['index'+self.benchMarkIndex]>-outlier]
-        dfRet = dfRet.loc[dfRet['index'+self.benchMarkIndex]<outlier]
+        dfRet = dfRet.loc[numpy.abs(dfRet['index'+self.benchMarkIndex])<outlier]
         dfRet = (dfRet-dfRet.mean())/dfRet.std()
         self.stkStd = dfRet.std()
         stockUniverse = self.indexConstituents.GetStocks(date,self.stkUniverIndex)
@@ -152,14 +151,12 @@ class PCA_For_Stat_Arb(object):
         if winsorize!=0:
             m = _stkRetDf.mean()
             s = _stkRetDf.std()
-            ub = m+3*s
-            lb = m-3*s
-            ubb = numpy.sign(_stkRetDf)*ub
-            lbb = numpy.sign(_stkRetDf)*lb
-            ubMsk = _stkRetDf>ub
-            lbmsk = _stkRetDf<lb
-            _stkRetDf.where(_stkRetDf>ub,ubb)
-            _stkRetDf.where(_stkRetDf<lb,lbb)
+            ub = m+winsorize*s
+            lb = m-winsorize*s
+            ubb = numpy.abs(numpy.sign(_stkRetDf))*ub
+            lbb = numpy.abs(numpy.sign(_stkRetDf))*lb
+            _stkRetDf[_stkRetDf>ub]=ubb
+            _stkRetDf[_stkRetDf<lb]=lbb
         _stkRetDf = _stkRetDf.fillna(0)
         self.stkRetDf = _stkRetDf[self.eigPortUniver]
         stkStd = self.stkStd[self.eigPortUniver]
@@ -202,9 +199,9 @@ class PCA_For_Stat_Arb(object):
         pos = self.trdDay.index(date)
         #print pos
         startDate = self.trdDay[pos-nSampleDate+1]
-        t1 = time.time()
+        #t1 = time.time()
         self.CalcEigenPortRet(startDate, date, winsorize)
-        t2 = time.time()
+        #t2 = time.time()
         resiDfVec = []
         o = numpy.ones([len(self.eigPortRet.index),1])
         A = numpy.hstack((self.eigPortRet.values,o))
