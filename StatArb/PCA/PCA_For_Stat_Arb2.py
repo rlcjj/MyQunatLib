@@ -25,7 +25,11 @@ class PCA_For_Stat_Arb(object):
 
     #----------------------------------------------------------------------
     def __init__(self,mktDataDbName,ifLoadMemoryDb,rawDataStartDate):
-        """Constructor"""
+        """
+        Constructor
+        """
+        #Load raw data into in-memory database
+        self.rawDataStartDate = rawDataStartDate
         mktDbPath = GetPath.GetLocalDatabasePath()["RawEquity"]+mktDataDbName
         if ifLoadMemoryDb==1:
             self.conn = lite.connect(":memory:")
@@ -43,28 +47,30 @@ class PCA_For_Stat_Arb(object):
         else:
             print "Directly connect to local database"
             self.conn = lite.connect(mktDbPath)
-            self.conn.text_factory = str
-            
+            self.conn.text_factory = str     
+
+        #Get all stock symbol have been included in the target index 
         self.indexConstituents = InvestUniver.GetIndexCompStocks("MktGenInfo\\IndexComp_Wind_CICC.db")        
-        self.rawDataStartDate = rawDataStartDate
+        
             
     #----------------------------------------------------------------------
     def LoadDataIntoTimeSeries(self,benchMarkIndex,stkUniverIndex,returnHorizon):
-        """"""
+        """
+        Load data from sql into python pandas data panel
+        """
+        #Index for hedging
         self.benchMarkIndex = benchMarkIndex
+        #Stock universe
         self.stkUniverIndex = stkUniverIndex
-        
         stockUniverse = self.indexConstituents.GetAllStocks(self.rawDataStartDate,stkUniverIndex)
         
         data = {}
-        
         cur = self.conn.cursor()
         cur.execute("SELECT Date,TC,Vol FROM IndexData WHERE StkCode='{}'".format(benchMarkIndex))
         vals=cur.fetchall()
         dt = numpy.array(vals)
         dfi = pd.DataFrame(dt[:,1:].astype(numpy.float),index=dt[:,0],columns=['c','vol'])
         data['index'+benchMarkIndex] = dfi
-        
         for stk in stockUniverse:
             cur.execute("""SELECT Date,
                                   (CASE WHEN Statu=-1 THEN TC_Adj ELSE Null END),
@@ -75,42 +81,49 @@ class PCA_For_Stat_Arb(object):
                 _dt = numpy.array(vals)
                 #print stk
                 _df = pd.DataFrame(_dt[:,1:].astype(numpy.float),index=_dt[:,0],columns=['c','vol'])     
-                data[stk] = _df
-            
+                data[stk] = _df  
         self.dp = pd.Panel(data)
+        
         self.trdDay = self.dp.major_axis.tolist()
-        self.df = self.dp[:,:,'c']
-        self.retDf2 = self.df.pct_change()
-        self.logPriceDf = numpy.log(self.df)
-        self.retDf = self.logPriceDf.diff()
-        #self.retDf = self.retDf.fillna(0)
+        self.histPriceDf = self.dp[:,:,'c']
+        self.histPctRetDf = self.df.pct_change()
+        self.histLogPriceDf = numpy.log(self.histPrice)
+        self.histLogRetDf = self.histLogPrice.diff()
+        
         
     #----------------------------------------------------------------------
-    def GenEigenPort(self,date,v,percentage,nSampleDate,outlier):
-        """"""
+    def GenEigenPort(self,date,v,percentage,sampleDays,extremeIndexRet):
+        """
+        Generate eigen vector portfolio
+        """
         pos = self.trdDay.index(date)
-        #print pos
-        startDate = self.trdDay[pos-nSampleDate+1]
-        if startDate<=self.trdDay[0]:
+        begSampleDate = self.trdDay[pos-sampleDays+1]
+        endSampleDate = date
+        if begSampleDate<=self.trdDay[0]:
             print "Not enough sample data for PCA, quit program"
             return None
-        dfRet = self.retDf[(self.retDf.index>=startDate)*(self.retDf.index<=date)]
-        dfRet = dfRet.loc[numpy.abs(dfRet['index'+self.benchMarkIndex])<outlier]
-        dfRet = (dfRet-dfRet.mean())/dfRet.std()
-        self.stkStd = dfRet.std()
+        #去掉指数波动较大的交易日数据
+        logRetDf = self.histLogRetDf[(self.histLogRetDf.index>=startDate)*(self.histLogRetDf.index<=date)]
+        logRetDf = logRetDf.loc[numpy.abs(logRetDf['index'+self.benchMarkIndex])<extremeIndexRet]
+        #标准化收益率
+        self.stkStdTs = logRetDf.std()
+        logRetDf = (logRetDf-logRetDf.mean())/self.stkStdTs
+        #获取当日指数成分股
         stockUniverse = self.indexConstituents.GetStocks(date,self.stkUniverIndex)
         stockUniverse.sort()
-        effectiveNum = int(len(dfRet.index)*0.4)
-        dfRet = dfRet[stockUniverse]
-        for stk in dfRet.columns:
-            if dfRet[stk].isnull().sum()>(len(dfRet.index)-effectiveNum):
-                dfRet=dfRet.drop(stk,axis=1)
-        #dfRet.to_csv('ewt2.csv')
-        refinedStkUniver = dfRet.columns.tolist()
-        stkNum = len(refinedStkUniver)
-        corrMat = dfRet.cov()
-        corrMat = corrMat.fillna(0)
-        mat = corrMat.values
+        logRetDf = logRetDf[stockUniverse]
+        #去掉停牌天数较多的股票
+        effectiveStkNum = int(len(logRetDf.index)*0.75)
+        for stk in logRetDf.columns:
+            if logRetDf[stk].isnull().sum()>(len(logRetDf.index)-effectiveStkNum):
+                logRetDf=logRetDf.drop(stk,axis=1)
+        logRetDf = logRetDf.fillna(0)
+        #获得最后用于计算主成分的股票
+        selectedStock = logRetDf.columns.tolist()
+        stkNum = len(selectedStock)
+        corrMatDf = logRet.cov()
+        mat = corrMatDf.values
+        #Shrinkage the correlation matrix 
         _mat = numpy.zeros((stkNum,stkNum))
         for i in xrange(stkNum):
             for j in xrange(stkNum):
@@ -118,12 +131,11 @@ class PCA_For_Stat_Arb(object):
                     _mat[i,j]=mat[i,j]
                 else:
                     _mat[i,j]=mat[i,j]/(1+10**-9)
+        #Eigen value decompsition
         eig = numpy.linalg.eigh(_mat)
         eigVec = eig[1]
         eigVecCols = numpy.linspace(stkNum-1,0,stkNum)
-        eigVecIndex = refinedStkUniver
-        #print eigVecIndex
-        #print eigVecCols
+        eigVecIndex = selectedStock
         self.eigVecDf = pd.DataFrame(eigVec,index=eigVecIndex,columns=eigVecCols)
         #self.eigVecDf.to_csv('eigVec.csv')
         eigVals = eig[0][::-1]
@@ -132,6 +144,7 @@ class PCA_For_Stat_Arb(object):
         sumEigVals = self.cumSumEigVals[-1]
         #for item in self.cumSumEigVals:
         #    print item/sumEigVals
+        #Get the significant eigen vector number
         for i in xrange(stkNum):
             if self.cumSumEigVals[i+1]/sumEigVals>=percentage:
                 break
@@ -140,8 +153,8 @@ class PCA_For_Stat_Arb(object):
         else:
             self.significantEigNum = v
         self.sigEigVals = self.eigVals[0:self.significantEigNum]
-        self.eigPortUniver = refinedStkUniver
-        return date,i+1,self.df['index'+self.benchMarkIndex][date],eigVals[0]/sumEigVals,len(dfRet.index)
+        self.eigenPortStock = selectedStock
+        return date,i+1,self.histPctRetDf['index'+self.benchMarkIndex][date],eigVals[0]/sumEigVals,len(logRetDf.index)
 
     #----------------------------------------------------------------------
     def CalcEigenPortRet(self,startDate,endDate,winsorize):
