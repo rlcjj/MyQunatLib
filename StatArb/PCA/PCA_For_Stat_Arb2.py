@@ -157,79 +157,52 @@ class PCA_For_Stat_Arb(object):
         return date,i+1,self.histPctRetDf['index'+self.benchMarkIndex][date],eigVals[0]/sumEigVals,len(logRetDf.index)
 
     #----------------------------------------------------------------------
-    def CalcEigenPortRet(self,startDate,endDate,winsorize):
-        """"""
-        _stkRetDf = self.retDf[(self.retDf.index>=startDate)*(self.retDf.index<=endDate)]
-        
+    def CalcEigenPortRet(self,begDate,endDate,winsorize):
+        """
+        计算主成分股票组合收益
+        """
+        logRetDf= self.histLogRetDf[(self.histLogRetDf.index>=begDate)*(self.histLogRetDf.index<=endDate)]
+        #数据去除极值
         if winsorize!=0:
-            m = _stkRetDf.mean()
-            s = _stkRetDf.std()
+            m = logRetDf.mean()
+            s = logRetDf.std()
             ub = m+winsorize*s
             lb = m-winsorize*s
-            ubb = numpy.abs(numpy.sign(_stkRetDf))*ub
-            lbb = numpy.abs(numpy.sign(_stkRetDf))*lb
-            _stkRetDf[_stkRetDf>ub]=ubb
-            _stkRetDf[_stkRetDf<lb]=lbb
-        _stkRetDf = _stkRetDf.fillna(0)
-        self.stkRetDf = _stkRetDf[self.eigPortUniver]
-        stkStd = self.stkStd[self.eigPortUniver]
-        self.vol = self.dp[:,:,'vol'][(self.retDf.index>=startDate)*(self.retDf.index<=endDate)][self.eigPortUniver]
-        self.vol = self.vol.fillna(0)
-        #=============================================================
+            ubb = numpy.abs(numpy.sign(logRetDf))*ub
+            lbb = numpy.abs(numpy.sign(logRetDf))*lb
+            logRetDf[logRetDf>ub]=ubb
+            logRetDf[logRetDf<lb]=lbb
+        logRetDf = logRetDf.fillna(0)
+        self.logRetDf = logRetDf[self.eigenPortStock]
+        stkStdTs = self.stkStdTs[self.eigenPortStock]
         #Here is to compute significant eigen portfolio return
-        #=============================================================
         sigEigDf = self.eigVecDf[range(self.significantEigNum)]
         wgt = sigEigDf/numpy.sqrt(self.sigEigVals)
         wgtMat = wgt.values
-        stkRetAdj = self.stkRetDf/stkStd
-        stkRetAdjMat = stkRetAdj.values
-        eigPortRetMat = numpy.dot(stkRetAdjMat,wgtMat)
-        self.eigPortRet = pd.DataFrame(eigPortRetMat,index=self.stkRetDf.index,columns=range(self.significantEigNum))
+        stkRetAdjDf = self.logRetDf/stkStdTs
+        stkRetAdjMat = stkRetAdjDf.values
+        eigenPortRetMat = numpy.dot(stkRetAdjMat,wgtMat)
+        self.eigenPortRetDf = pd.DataFrame(eigenPortRetMat,index=self.logRetDf.index,columns=range(self.significantEigNum))
         
-        #=============================================================
-        #Alternative method to compute significant eigen portfolio returns
-        #=============================================================
-        #portRet = []
-        #for i in xrange(self.significantEigNum):
-            #_portRet = 0 
-            #w = 0
-            #for stk in self.eigPortUniver:
-                #w += self.eigVecDf[i][stk]/self.stkStd[stk]
-            #for stk in self.eigPortUniver:
-                ##print self.eigDf[i][stk]
-                #_portRet += stkRetDf[stk]*self.eigVecDf[i][stk]/(self.stkStd[stk]*numpy.sqrt(self.eigVals[i]))
-                ##print _portRet
-            #portRet.append(_portRet.to_frame(i))
-        #self.eigPortRet = pd.concat(portRet,axis=1)
-
-        #self.eigPortRet.to_csv('eigenPortRetNew.csv')
-        self.eigPortRetStartDate = startDate
-        self.eigPortRetEndDate = endDate
         
     #----------------------------------------------------------------------
-    def RegressOnEigenFactor(self,date,nSampleDate,VolAdjPrice,winsorize=0):
-        """"""
+    def RegressOnEigenFactor(self,date,sampleDays,VolAdjPrice,winsorize=0):
+        """
+        Regress stock return on eigen portfolio return
+        """
         pos = self.trdDay.index(date)
-        #print pos
-        startDate = self.trdDay[pos-nSampleDate+1]
-        #t1 = time.time()
-        self.CalcEigenPortRet(startDate, date, winsorize)
-        #t2 = time.time()
+        begDate = self.trdDay[pos-sampleDays+1]
+        endDate = date
+        #Calculate eigen portfolio return
+        self.CalcEigenPortRet(begDate,endDate,winsorize)
+        #vector to store residuals
         resiDfVec = []
-        o = numpy.ones([len(self.eigPortRet.index),1])
-        A = numpy.hstack((self.eigPortRet.values,o))
+        o = numpy.ones([len(self.eigenPortRetDf.index),1])
+        A = numpy.hstack((self.eigenPortRetDf.values,o))
         y = self.stkRetDf.values
 
-        
-        #print A
-        #print y
         res = numpy.linalg.lstsq(A,y)
-        """
-        for stk in self.eigPortUniver:
-            res = ols(y=self.stkRetDfstk],x=self.eigPortRet)
-            resiDfVec.append(res.resid.to_frame(stk))
-        resiDf = pd.concat(resiDfVec,axis=1)
-        """
+        
         if VolAdjPrice==1:
             wgt = self.vol.mean()/(self.vol+0.00001)
             wgt.to_csv('wgt.csv')
@@ -380,35 +353,4 @@ def CalcZScore(_x,drift):
 
         
 
-if __name__ == "__main__":    
-    tm1 = time.time()
-    corrMatCalc = PCA_For_Stat_Arb("MktData\\MktData_Wind_CICC.db", 1,"20100127")
-    corrMatCalc.LoadDataIntoTimeSeries("000300",1)
-    tm2 = time.time()
-    print tm2-tm1
-    corrMatCalc.GenEigenPort("20131217",0,0.7,250,0.05)
-    corrMatCalc.RegressOnEigenFactor('20131217', 60,winsorize=0)
-    res = corrMatCalc.OUFitAndCalcZScore()
-    res[0].to_csv('scores.csv')
-    
-    #corrMatCalc.CalEigenPortRet("20150121", "20160128")
-    
-    
-    #x = numpy.array([numpy.sin(numpy.array(range(0,60))/10.0)+numpy.random.rand(60),
-                    #numpy.sin(numpy.array(range(0,60))/10.0)+numpy.random.rand(60),
-                    #numpy.sin(numpy.array(range(0,60))/10.0)+numpy.random.rand(60)]).T
-    #df = pd.DataFrame(x,index=range(0,60),columns=['b ','a','c'])
-
-    
-    #res2 = df.apply(CalcZScore)
-    #res2.to_csv('pdTest.csv')
-    #print res2
-    
-    #x = numpy.array([1,2,3,4,5,6,6,7,7,8,8,9,9,90,0,0])
-    #y = numpy.zeros(len(x))
-    #X = numpy.vstack((x,numpy.ones(len(x)))).T
-    #res = numpy.linalg.lstsq(X,y)
-    #print "done"
-            
-        
     
