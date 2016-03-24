@@ -86,9 +86,10 @@ class PCA_For_Stat_Arb(object):
         
         self.trdDay = self.dp.major_axis.tolist()
         self.histPriceDf = self.dp[:,:,'c']
-        self.histPctRetDf = self.df.pct_change()
-        self.histLogPriceDf = numpy.log(self.histPrice)
-        self.histLogRetDf = self.histLogPrice.diff()
+        self.histPctRetDf = self.histPriceDf.pct_change()
+        self.histLogPriceDf = numpy.log(self.histPriceDf)
+        self.histLogRetDf = self.histLogPriceDf.diff()
+        self.histVolDf = self.dp[:,:,'vol']
         
         
     #----------------------------------------------------------------------
@@ -103,11 +104,8 @@ class PCA_For_Stat_Arb(object):
             print "Not enough sample data for PCA, quit program"
             return None
         #去掉指数波动较大的交易日数据
-        logRetDf = self.histLogRetDf[(self.histLogRetDf.index>=startDate)*(self.histLogRetDf.index<=date)]
+        logRetDf = self.histLogRetDf[(self.histLogRetDf.index>=begSampleDate)*(self.histLogRetDf.index<=endSampleDate)]
         logRetDf = logRetDf.loc[numpy.abs(logRetDf['index'+self.benchMarkIndex])<extremeIndexRet]
-        #标准化收益率
-        self.stkStdTs = logRetDf.std()
-        logRetDf = (logRetDf-logRetDf.mean())/self.stkStdTs
         #获取当日指数成分股
         stockUniverse = self.indexConstituents.GetStocks(date,self.stkUniverIndex)
         stockUniverse.sort()
@@ -117,11 +115,14 @@ class PCA_For_Stat_Arb(object):
         for stk in logRetDf.columns:
             if logRetDf[stk].isnull().sum()>(len(logRetDf.index)-effectiveStkNum):
                 logRetDf=logRetDf.drop(stk,axis=1)
+        #标准化收益率
+        self.stkStdTs = logRetDf.std()
+        logRetDf = (logRetDf-logRetDf.mean())/self.stkStdTs     
         logRetDf = logRetDf.fillna(0)
         #获得最后用于计算主成分的股票
         selectedStock = logRetDf.columns.tolist()
         stkNum = len(selectedStock)
-        corrMatDf = logRet.cov()
+        corrMatDf = logRetDf.cov()
         mat = corrMatDf.values
         #Shrinkage the correlation matrix 
         _mat = numpy.zeros((stkNum,stkNum))
@@ -161,20 +162,26 @@ class PCA_For_Stat_Arb(object):
         """
         计算主成分股票组合收益
         """
-        logRetDf= self.histLogRetDf[(self.histLogRetDf.index>=begDate)*(self.histLogRetDf.index<=endDate)]
+        #用于计算主成分组合收益和随后进行回归计算的股票收益数据
+        logRetDf = self.histLogRetDf[(self.histLogRetDf.index>=begDate)*(self.histLogRetDf.index<=endDate)][self.eigenPortStock]
+        #用于计算主成分组合收益和随后进行回归计算的股票收益数据,待去除极值
+        _logRetDf = logRetDf.copy()
         #数据去除极值
         if winsorize!=0:
-            m = logRetDf.mean()
-            s = logRetDf.std()
+            m = _logRetDf.mean()
+            s = _logRetDf.std()
             ub = m+winsorize*s
             lb = m-winsorize*s
-            ubb = numpy.abs(numpy.sign(logRetDf))*ub
-            lbb = numpy.abs(numpy.sign(logRetDf))*lb
-            logRetDf[logRetDf>ub]=ubb
-            logRetDf[logRetDf<lb]=lbb
+            ubb = numpy.abs(numpy.sign(_logRetDf))*ub
+            lbb = numpy.abs(numpy.sign(_logRetDf))*lb
+            _logRetDf[_logRetDf>ub]=ubb
+            _logRetDf[_logRetDf<lb]=lbb
+        _logRetDf = _logRetDf.fillna(0)
         logRetDf = logRetDf.fillna(0)
-        self.logRetDf = logRetDf[self.eigenPortStock]
-        stkStdTs = self.stkStdTs[self.eigenPortStock]
+        self.logRetDf = logRetDf#用于计算主成分组合收益和随后进行回归计算的股票收益数据
+        self.logRetTrimedDf = _logRetDf#用于计算主成分组合收益和随后进行回归计算的股票收益数据，已经去除极值
+        self.volDf = self.histVolDf[(self.histVolDf.index>=begDate)*(self.histVolDf.index<=endDate)][self.eigenPortStock]
+        stkStdTs = self.stkStdTs
         #Here is to compute significant eigen portfolio return
         sigEigDf = self.eigVecDf[range(self.significantEigNum)]
         wgt = sigEigDf/numpy.sqrt(self.sigEigVals)
@@ -186,7 +193,7 @@ class PCA_For_Stat_Arb(object):
         
         
     #----------------------------------------------------------------------
-    def RegressOnEigenFactor(self,date,sampleDays,VolAdjPrice,winsorize=0):
+    def RegressOnEigenFactor(self,date,sampleDays,winsorize=0):
         """
         Regress stock return on eigen portfolio return
         """
@@ -196,45 +203,43 @@ class PCA_For_Stat_Arb(object):
         #Calculate eigen portfolio return
         self.CalcEigenPortRet(begDate,endDate,winsorize)
         #vector to store residuals
-        resiDfVec = []
         o = numpy.ones([len(self.eigenPortRetDf.index),1])
         A = numpy.hstack((self.eigenPortRetDf.values,o))
-        y = self.stkRetDf.values
-
+        y = self.logRetTrimedDf.values
+        #最小二乘法回归
         res = numpy.linalg.lstsq(A,y)
-        
-        if VolAdjPrice==1:
-            wgt = self.vol.mean()/(self.vol+0.00001)
-            wgt.to_csv('wgt.csv')
-            _yadj = self.stkRetDf*wgt
-            yadj = _yadj.values
-            resi = yadj - numpy.dot(A,res[0])
-        else:
-            resi = y - numpy.dot(A,res[0])
-        resiDf = pd.DataFrame(resi,index=self.eigPortRet.index,columns=self.eigPortUniver)
-        #for stk in self.eigPortUniver:
-        #    print stk 
-        #resiDf.to_csv('residuals.csv')
-        rss = sum(resi**2)
+        #计算回归残差
+        residual = y - numpy.dot(A,res[0])
+        residualDf = pd.DataFrame(residual,index=self.logRetTrimedDf.index,columns=self.eigenPortStock)
+        #计算R-Square
+        rss = sum(residual**2)
         tss = sum((y-numpy.mean(y,0))**2)
         m = A.shape[0]
         n = A.shape[1]-1
         std_error = numpy.sqrt(rss/(m-n))
         std_y = numpy.sqrt(tss/(m-1))
         r2Adj = 1-(std_error/std_y)**2
-        self.regressR2Adj = pd.Series(r2Adj,index=self.eigPortUniver)
-        t3 = time.time()
+        self.regressR2Adj = pd.Series(r2Adj,index=self.eigenPortStock)
         #resiDf.cumsum().to_csv('residuals2.csv')
         #self.regressR2Adj.to_csv('r2_adj.csv')
         #print t2-t1,t3-t2    
-        self.regressResiduals = resiDf
+        self.regressResidualDf = residualDf
         
     
     #----------------------------------------------------------------------
-    def OUFitAndCalcZScore(self,sampleDays,drift):
-        """"""
+    def OUFitAndCalcZScore(self,sampleDays,VolumeAdjusted,drift):
+        """
+        O-U fit on regression residuals 
+        """
+        if VolumeAdjusted==1:
+            wgt = self.volDf.mean()/(self.volDf)
+            wgt = wgt.replace(numpy.inf,numpy.nan)
+            wgt = wgt.fillna(0)
+            residual = self.regressResidualDf*wgt
+        else:
+            residual = self.regressResidualDf
         #self.regressResiduals.cumsum().to_csv("cumresidual.csv")
-        res = self.regressResiduals.iloc[-sampleDays:].cumsum().apply(CalcZScore,args=(drift,))
+        res = residual.iloc[-sampleDays:].cumsum().apply(CalcZScore,args=(drift,))
         #res.to_csv('scors.csv')
         score = (res.loc['m']-res.loc['m'].mean())/res.loc['s']
         score = score.to_frame('score_adj')
@@ -247,11 +252,11 @@ class PCA_For_Stat_Arb(object):
         """"""
         startDate = scores.index[0]
         endDate = scores.index[-1]
-        dfRet = self.retDf2[(self.retDf.index>=startDate)*(self.retDf.index<=endDate)]
+        dfRet = self.histPctRetDf[(self.histPctRetDf.index>=startDate)*(self.histPctRetDf.index<=endDate)]
         signals = TradeRule1(scores,revsT,openThreshold,closeThreshold,revsThreshold,dd)
         signals.to_csv("signals.csv")
         trdTime = signals.diff().abs().sum(axis=1)
-        trdTime.to_csv('tradeTimes.csv')
+        #trdTime.to_csv('tradeTimes.csv')
         posi = signals.sum(axis=1)
         longPorts = dfRet.where(signals==1)
         #longPorts.to_csv("LongPorts.csv")
@@ -259,7 +264,7 @@ class PCA_For_Stat_Arb(object):
         longRets = longPorts.mean(1)
         shortRets = dfRet['index'+self.benchMarkIndex]
         hedgeRet = longRets - shortRets
-        return hedgeRet,posi,longRets
+        return hedgeRet,posi,trdTime,longRets
         #hedgeRet.to_csv("HedgeRets.csv")
 
 
