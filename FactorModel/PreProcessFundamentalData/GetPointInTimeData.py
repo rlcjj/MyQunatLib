@@ -6,17 +6,33 @@
   Created: 2015/11/30
 """
 
+import os,sys,logging
+root = os.path.abspath("D:\\MyQuantLib\\")
+sys.path.append(root)
+
 import sqlite3 as lite
 import time
 from datetime import datetime,timedelta
+import Tools.LogOutputHandler as LogHandler
+
 
 ########################################################################
-class GetFdmtDerivData(object):
-    """"""
+class GetPointInTimeData(object):
+    """
+    获取当前时点的最新基本面数据
+    """
 
     #----------------------------------------------------------------------
-    def __init__(self,finRptDbPath,mktDataDbPath):
-        """Constructor"""
+    def __init__(self,finRptDbPath,mktDataDbPath,logger):
+        """
+        Constructor
+        Load the fundamental data into in-memory database
+        """
+        if logger == "":
+            self.logger = LogHandler.LogOutputHandler("SyncFinRpt.log")
+        else:    
+            self.logger = logger
+        
         self.conn = lite.connect(":memory:")
         self.conn.text_factory = str
         cur = self.conn.cursor()
@@ -36,6 +52,7 @@ class GetFdmtDerivData(object):
         cur.execute("CREATE INDEX IdF ON ForecastData (StkCode,RPT_DATE,RDeclareDate)")
         cur.execute("CREATE INDEX IdD ON Dividend (StkCode,RDeclareDate)")
         print "Finished"
+    
     
     #----------------------------------------------------------------------
     def GetAllStocks(self):
