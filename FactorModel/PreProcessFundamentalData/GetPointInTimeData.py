@@ -103,8 +103,10 @@ class GetPointInTimeData(object):
         return declareDates      
     
     #----------------------------------------------------------------------
-    def GetForecastDataDeclareDate(self,stkCode,begDate,endDate):
-        """"""
+    def GetForecastReportDeclareDate(self,stkCode,begDate,endDate):
+        """
+        获取预测报告公告日期
+        """
         if endDate == None:
             endDate = "20200101" #Some day in the far future
         _rBegDate = datetime.strptime(begDate,"%Y%m%d")-timedelta(days=180)
@@ -128,12 +130,14 @@ class GetPointInTimeData(object):
                 _declareDates.append(row[0])
             declareDates=list(set(declareDates)|set(_declareDates))
         declareDates.sort()
-        return declareDates            
+        return declareDates           
+    
     
     #----------------------------------------------------------------------
-    def CalcFinRptDerivData(self,lookupDate,lagDays,stkCode,algos):
-        """"""
-        tm1 = time.time()
+    def ProcessFinancialData(self,lookupDate,lagDays,stkCode,algos):
+        """
+        初步处理财报数据，获取公布时间点最新数据，并根据算法简单计算
+        """
         
         cur = self.conn.cursor()
         
@@ -162,9 +166,12 @@ class GetPointInTimeData(object):
         #print "Time consume:{}".format(tm2-tm1)
         return rptInfo[0],rptInfo[1],rptInfo[2],rptInfo[3],derivData
     
+    
     #----------------------------------------------------------------------
-    def CalcForecastDerivData(self,lookupDate,lagDays,stkCode,algos):
-        """"""
+    def ProcessForecastData(self,lookupDate,lagDays,stkCode,algos):
+        """
+        初步处理预测数据，获取公布时间点最新数据，并根据算法简单计算
+        """
         tm1 = time.time()
         cur = self.conn.cursor()
         derivData = []
@@ -176,9 +183,3 @@ class GetPointInTimeData(object):
         #print "Time consume:{}".format(tm2-tm1)
         return thisAcctYear,derivData    
     
-#----------------------------------------------------------------------
-def MyPrint(arg):
-    """"""
-    _print = 0
-    if _print == 1:
-        print arg    
