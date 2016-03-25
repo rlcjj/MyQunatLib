@@ -28,15 +28,18 @@ class GetPointInTimeData(object):
         Constructor
         Load the fundamental data into in-memory database
         """
+        #Create log file
         if logger == "":
             self.logger = LogHandler.LogOutputHandler("SyncFinRpt.log")
         else:    
             self.logger = logger
         
+        self.logger.info("Create in-memory database")
         self.conn = lite.connect(":memory:")
         self.conn.text_factory = str
         cur = self.conn.cursor()
-        print "Load local database into in-memory database"
+        
+        self.logger.info("Load local database into in-memory database")
         cur.execute("ATTACH '{}' AS FinRpt".format(finRptDbPath))
         cur.execute("ATTACH '{}' AS MktData".format(mktDataDbPath))
         cur.execute("CREATE TABLE BalanceSheet AS SELECT * FROM FinRpt.BalanceSheet")
@@ -44,19 +47,23 @@ class GetPointInTimeData(object):
         cur.execute("CREATE TABLE CashFlowStatement AS SELECT * FROM FinRpt.CashFlowStatement")
         cur.execute("CREATE TABLE ForecastData AS SELECT * FROM FinRpt.ForecastData")        
         cur.execute("CREATE TABLE Dividend AS SELECT * FROM MktData.Dividend")
-        print "Finished"
-        print "Create index"
+        self.logger.info("Finished")
+        
+        self.logger.info("Create index on in-memory database")
         cur.execute("CREATE INDEX Id1 ON BalanceSheet (StkCode,RPT_DATE,RDeclareDate)")
         cur.execute("CREATE INDEX Id2 ON IncomeStatement (StkCode,RPT_DATE,RDeclareDate)")
         cur.execute("CREATE INDEX Id3 ON CashFlowStatement (StkCode,RPT_DATE,RDeclareDate)")
         cur.execute("CREATE INDEX IdF ON ForecastData (StkCode,RPT_DATE,RDeclareDate)")
         cur.execute("CREATE INDEX IdD ON Dividend (StkCode,RDeclareDate)")
-        print "Finished"
+        self.logger.info("Finished")
     
     
     #----------------------------------------------------------------------
-    def GetAllStocks(self):
-        """"""
+    def GetAllTickerCode(self):
+        """
+        获取数据库所有股票代码
+        """
+        self.logger.info("Get all ticker code in the database")
         cur = self.conn.cursor()
         cur.execute("SELECT DISTINCT StkCode FROM BalanceSheet")
         rows = cur.fetchall()
@@ -66,8 +73,10 @@ class GetPointInTimeData(object):
         return allStks
     
     #----------------------------------------------------------------------
-    def GetFinDataDeclareDate(self,stkCode,begDate,endDate):
-        """"""
+    def GetFinancialReportDeclareDate(self,stkCode,begDate,endDate):
+        """
+        获取财务报表的公告日期
+        """
         if endDate == None:
             endDate = "20200101" #Some day in the far future
         _rBegDate = datetime.strptime(begDate,"%Y%m%d")-timedelta(days=180)
