@@ -20,15 +20,21 @@ import DefineInvestUniverse.GetIndexCompStocks as IndexCompStks
 from ConfigParser import ConfigParser
 
 ########################################################################
-class GenRawFactorsAndZScoresDatabase(object):
+class ComputeFactorsAndZScores(object):
     """"""
     
     #----------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self,logger=None):
         """Constructor"""
+        #Create log file
+        if logger == None:
+            self.logger = LogHandler.LogOutputHandler("ComputeFactorsAndZScores")
+        else:    
+            self.logger = logger
+            
         localProcDataDBPath = GetPath.GetLocalDatabasePath()["ProcEquity"]
         self.procDbPath = localProcDataDBPath
-        self._trdDays = GetTrdDay.GetTradeDays()   
+        self.totalTradeDay = GetTrdDay.GetTradeDays()   
 
     #----------------------------------------------------------------------
     def LoadSourceData(self,finRptDataDbAddr,mktDataDbAddr,indexCompStksDataDbAddr):
@@ -37,23 +43,25 @@ class GenRawFactorsAndZScoresDatabase(object):
         self.calcFactorVals = CalcFactorVals.CalcFactorVals(finRptDataDbAddr,mktDataDbAddr)
         
     #----------------------------------------------------------------------
-    def SetStockUniverseAndRevalueDate(self,stockUniverse,begDate,endDate,holdingPeriod):
-        """"""
-        self.trdDays = []
-        self.ifRevalue = {}
-        self.revalueDate = []
+    def SetStockUniverseAndFactorReCalcDate(self,stockUnviverIndex,begDate,endDate,holdingPeriod):
+        """
+        设定股票的投资范围和因子估算的日期
+        """
+        self.tradeDays = []
+        self.reCalcDayMark = {}
+        self.reCalcDate = []
         k = 0
-        for dt in self._trdDays:
+        for dt in self.totalTradeDay:
             if dt>=begDate and dt<=endDate:
-                self.trdDays.append(dt)
+                self.tradeDays.append(dt)
                 k+=1
                 if k % holdingPeriod == 1:
-                    self.ifRevalue[dt]=1
-                    self.revalueDate.append(dt)
+                    self.reCalcDayMark[dt]=1
+                    self.reCalcDate.append(dt)
                 else:
-                    self.ifRevalue[dt]=0  
-        self.stkUniver = stockUniverse
-        self.fctDbName = "Factor_"+stockUniverse+"_"+repr(holdingPeriod)+"D"
+                    self.reCalcDayMark[dt]=0  
+        self.stkUniver = stockUnviverIndex
+        self.factorDatabaseName = "Factor_"+stockUnviverIndex+"_"+repr(holdingPeriod)+"D"
         
     
     #----------------------------------------------------------------------
@@ -62,24 +70,19 @@ class GenRawFactorsAndZScoresDatabase(object):
         self.factorNames = []
         self.factorAlgos = []
         for style in factorStyle:
-            if len(style.split('.'))==1:
-                _style = style
-            else:
-                _style = style.split('.')[0]+"\\"+style.split('.')[1]
-            path = root + "\\FactorAlgos\\"+_style
+            path = root + "\\FactorModel\\ComputeFactor\\FactorAlgo\\FactorAlgos\\"+style
             algoFiles = os.listdir(path)
             for algoFile in algoFiles: 
                 algoName = algoFile.split('.')
                 if algoName[0][0]!='_' and algoName[1]=="py":
+                    self.logger.info("Load factor algo {}".format(algoName[0]))
                     self.factorNames.append(algoName[0])
                     exec("import FactorAlgos.{}.{} as algo".format(style,algoName[0]))
                     self.factorAlgos.append(algo)
-        print len(self.factorAlgos)
-        print self.factorNames
                     
     
     #----------------------------------------------------------------------
-    def GenRawFactors(self):
+    def ComputeFactors(self):
         """"""
         self.conn = lite.connect(self.procDbPath+self.fctDbName+".db")
         self.conn.text_factory = str

@@ -20,8 +20,16 @@ class CalcFactorVals(object):
     """"""
 
     #----------------------------------------------------------------------
-    def __init__(self,finDerivDataDbAddr,mktDataDbAddr,conn=None):
+    def __init__(self,finDerivDataDbAddr,mktDataDbAddr,conn=None,logger=None):
         """Constructor"""
+        
+        #Create log file
+        if logger == None:
+            self.logger = LogHandler.LogOutputHandler("CalcFactorVals.log")
+        else:    
+            self.logger = logger        
+        
+        #Load data into in-memory database
         if conn!=None:
             self.conn = conn
         else:
@@ -29,38 +37,39 @@ class CalcFactorVals(object):
             self.conn.text_factory = str
             cur = self.conn.cursor()
             
-            print "Load local database into in-memory database..."        
+            self.logger.info("Load local database into in-memory database...")        
             locDbPath = GetPath.GetLocalDatabasePath()
             _finDerivDataDbAddr = locDbPath["ProcEquity"]+finDerivDataDbAddr
             _mktDataDbAddr = locDbPath["RawEquity"]+mktDataDbAddr
             cur.execute("ATTACH '{}' AS FinRpt".format(_finDerivDataDbAddr))
             cur.execute("ATTACH '{}' AS MktData".format(_mktDataDbAddr))
             
-            print "Load table FinRptDerivData"
+            self.logger.info("Load table FinRptDerivData")
             cur.execute("CREATE TABLE FinRptDerivData AS SELECT * FROM FinRpt.FinRptDerivData")
-            print "Done"
-            print "Load table ForecastData"
+            self.logger.info("Done")
+            self.logger.info("Load table ForecastData")
             cur.execute("CREATE TABLE FcstData AS SELECT * FROM FinRpt.ForecastData")
-            print "Done"
-            print "Load table MarketData"
+            self.logger.info("Done")
+            self.logger.info("Load table MarketData")
             cur.execute("CREATE TABLE MktData AS SELECT StkCode,Date,TC,LC,TC_Adj FROM MktData.A_Share_Data WHERE Date>='20060101'")
-            print "Done"
-            print "Load talbe MarketCap"
+            self.logger.info("Done")
+            self.logger.info("Load talbe MarketCap")
             cur.execute("CREATE TABLE MktCap AS SELECT * FROM MktData.MarketCap")
-            print "Done"  
+            self.logger.info("Done") 
             
-            print "Create index on table FinRptDerivData"
+            self.logger.info("Create index on table FinRptDerivData")
             cur.execute("CREATE INDEX fiId ON FinRptDerivData (StkCode,DeclareDate)")
-            print "Done"
-            print "Create index on table ForecastData"
+            self.logger.info("Done")
+            self.logger.info("Create index on table ForecastData")
             cur.execute("CREATE INDEX fcId ON FcstData (StkCode,DeclareDate)")
-            print "Done"
-            print "Create index on table MarketData"
+            self.logger.info("Done")
+            self.logger.info("Create index on table MarketData")
             cur.execute("CREATE INDEX mId ON MktData (StkCode,Date)")
-            print "Done"
-            print "Crate index on table MarketCap"
+            self.logger.info("Done")
+            self.logger.info("Crate index on table MarketCap")
             cur.execute("CREATE INDEX cId ON MktCap (StkCode,Date)")
-            print "Done"            
+            self.logger.info("Done")            
+    
     
     #----------------------------------------------------------------------
     def Calc(self,lookupDate,effectiveDays,stkCode,algos):
@@ -74,7 +83,7 @@ class CalcFactorVals(object):
         lookupLimit = _lookupLimit.strftime("%Y%m%d")    
         date = (lookupLimit,lookupDate)
         
-        begDate = date[0]
+        begDate = date[0] 
         endDate = date[1]        
 
         sql = """

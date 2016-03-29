@@ -23,13 +23,13 @@ class GetPointInTimeData(object):
     """
 
     #----------------------------------------------------------------------
-    def __init__(self,finRptDbPath,mktDataDbPath,logger):
+    def __init__(self,finRptDbPath,mktDataDbPath,logger=None):
         """
         Constructor
         Load the fundamental data into in-memory database
         """
         #Create log file
-        if logger == "":
+        if logger == None:
             self.logger = LogHandler.LogOutputHandler("SyncFinRpt.log")
         else:    
             self.logger = logger
