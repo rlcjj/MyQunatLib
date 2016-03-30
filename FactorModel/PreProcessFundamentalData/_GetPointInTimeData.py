@@ -59,7 +59,7 @@ class GetPointInTimeData(object):
     
     
     #----------------------------------------------------------------------
-    def GetAllTickerCode(self):
+    def GetAllStockCode(self):
         """
         获取数据库所有股票代码
         """
@@ -134,7 +134,7 @@ class GetPointInTimeData(object):
     
     
     #----------------------------------------------------------------------
-    def ProcessFinancialData(self,lookupDate,lagDays,stkCode,algos):
+    def ProcessFinancialData(self,lookupDate,lagDays,stkCode,items):
         """
         初步处理财报数据，获取公布时间点最新数据，并根据算法简单计算
         """
@@ -158,25 +158,24 @@ class GetPointInTimeData(object):
             return None
         rptInfo = content
         derivData = []
-        for algo in algos:
-            _derivData = algo.Calc(cur,lookupDate,rptInfo,stkCode)
+        for item in items:
+            exec("import FactorModel.PreProcessFundamentalData.FinancialReportData.{} as _item".format(item))
+            _derivData = _item.Calc(cur,lookupDate,rptInfo,stkCode)
             derivData.append(_derivData)
-        tm2 = time.time()
-        
-        #print "Time consume:{}".format(tm2-tm1)
         return rptInfo[0],rptInfo[1],rptInfo[2],rptInfo[3],derivData
     
     
     #----------------------------------------------------------------------
-    def ProcessForecastData(self,lookupDate,lagDays,stkCode,algos):
+    def ProcessForecastData(self,lookupDate,lagDays,stkCode,items):
         """
         初步处理预测数据，获取公布时间点最新数据，并根据算法简单计算
         """
         tm1 = time.time()
         cur = self.conn.cursor()
         derivData = []
-        for algo in algos:
-            _derivData = algo.Calc(cur,lookupDate,"",stkCode)
+        for item in items:
+            exec("import FactorModel.PreProcessFundamentalData.ForecastReportData.{} as _item".format(item))
+            _derivData = _item.Calc(cur,lookupDate,"",stkCode)
             derivData.append(_derivData)
         tm2 = time.time()
         thisAcctYear = lookupDate[0:4]+"1231"

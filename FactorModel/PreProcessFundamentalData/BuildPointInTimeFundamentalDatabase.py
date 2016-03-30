@@ -81,10 +81,10 @@ class BuildFundamentalDatabase(object):
         cur.execute("DROP TABLE IF EXISTS ForecastPointInTimeData")
         cur.execute("PRAGMA synchronous = OFF")
         
+        self.logger.info("Create data table 'FinancialPoitInTiemData'")
         sqlStr = ""
         for item in self.finItems:
             sqlStr+=","+item+" FLOAT"
-        
         cur.execute("""
                     CREATE TABLE FinancialPoitInTiemData(StkCode TEXT,
                                                          AcctPeriod TEXT,
@@ -95,6 +95,7 @@ class BuildFundamentalDatabase(object):
                                                          {})
                     """.format(sqlStr))
         
+        self.logger.info("Create data table 'ForecastPointInTImeData'")
         sqlStr = ""
         for item in self.fcstItems:
             sqlStr+=","+item+" FLOAT"
@@ -124,7 +125,7 @@ class BuildFundamentalDatabase(object):
         lenOfItems = len(self.finItems)
         insertSql = "?,?,?,?,?,?"+lenOfItems*",?"
         for stk in allStkCodes:
-            print stk
+            self.logger.info("Process financial report data - stock code {}".format(stk))
             date = self.constituentStockCls.GetStockIncludedAndExcludedDate(stk,self.constituentIndexCode)
             begDate = date[0][0]
             endDate = date[-1][1]
@@ -143,7 +144,7 @@ class BuildFundamentalDatabase(object):
         lenOfItems = len(self.items2)
         insertSql = "?,?,?"+lenOfItems*",?"
         for stk in allStkCodes:
-            print stk
+            self.logger.info("Process forecast report data - stock code {}".format(stk))
             date = self.compStks.GetIncludedAndExcludedDate(stk,self.constituentIndexCode)
             begDate = date[0][0]
             endDate = date[-1][1]
