@@ -11,7 +11,7 @@ import sqlite3 as lite
 root = os.path.abspath(__file__).split("MyQuantLib")[0]+"MyQuantLib"
 sys.path.append(root)
 import Tools.GetLocalDatabasePath as GetPath
-import DefineInvestUniverse.GetIndexCompStocks as CompStks
+import InvestmentUniverse.GetIndexConstituentStocks as GetIndexConstituentStocks
 import FactorModel.PreProcessFundamentalData._GetPointInTimeData as GetPTTData
 import Tools.LogOutputHandler as LogHandler
 
@@ -33,65 +33,84 @@ class BuildFundamentalDatabase(object):
         
         self.locDbPath = GetPath.GetLocalDatabasePath()
         
+        
     #----------------------------------------------------------------------
     def SetStockUniverse(self,indexConstituentDatabase,constituentIndexCode):
-        """"""
+        """
+        确定股票投资范围
+        """
         self.constituentIndexCode = constituentIndexCode
-        self.constituentStockCls = CompStks.GetIndexCompStocks(dbAddress)       
+        self.constituentStockCls = GetIndexConstituentStocks.GetIndexConstituentStocks(dbAddress,self.logger)       
 
 
     #----------------------------------------------------------------------
-    def AppendFinRptItems(self,items):
-        """"""
-        self.items1 = []
-        for item in items:
-            self.items1.append(item)
-            
-    #----------------------------------------------------------------------
-    def AppendFcstItems(self,items):
-        """"""
-        self.items2 = []
-        for item in items:
-            self.items2.append(item)        
+    def LoadFundamentalDataItemsToBeProcessed(self):
+        """
+        加载需要预处理的财务报表和预测数据项目
+        """
+        itemDirPath = root+"//FactorModel//PreProcessFundamentalData//DataProcessAlgo"
         
+        finItemFilePath = itemDirPath+"//FinancialReportData"
+        self.finItems = []
+        finItemFiles = os.listdir(finItemFilePath)
+        for f in finItemFiles:
+            itemName = f.split('.')
+            if itemName[0][0]!='_' and itemName[1]=="py":
+                self.logger.info("Load financial report item {}".format(itemName[0]))
+                self.finItems.append(itemName[0])
+        
+        fcstItemFilePath = itemDirPath+"//ForecastReportData"
+        self.fcstItems = []
+        fcstItemFiles = os.listdir(fcstItemFilePath)
+        for f in fcstItemFiles:
+            itemName = f.split('.')
+            if itemName[0][0]!='_' and itemName[1]=="py":
+                self.logger.info("Load forecast report item {}".format(itemName[0]))
+                self.fcstItems.append(itemName[0])        
+
     
     #----------------------------------------------------------------------
-    def CreateDatabase(self,indicDbName):
-        """"""
-        indicDbAdrr = self.locDbPath["ProcEquity"]+indicDbName
-        self.indicConn = lite.connect(indicDbAdrr)
-        cur = self.indicConn.cursor()
-        cur.execute("DROP TABLE IF EXISTS FinRptDerivData")
-        cur.execute("DROP TABLE IF EXISTS ForecastData")
+    def CreateDatabase(self,pointInTimeDatabaseName):
+        """
+        创立即时基本面数据数据库
+        """
+        pttDbAddr = self.locDbPath["ProcEquity"]+pointInTimeDatabaseName
+        self.pttConn = lite.connect(pttDbAddr)
+        cur = self.pttConn.cursor()
+        cur.execute("DROP TABLE IF EXISTS FinancialPontInTimeData")
+        cur.execute("DROP TABLE IF EXISTS ForecastPointInTimeData")
         cur.execute("PRAGMA synchronous = OFF")
+        
         sqlStr = ""
-        for item in self.items1:
-            itemName = item.__name__.split('.')[-1]
-            sqlStr+=","+itemName+" FLOAT"
+        for item in self.finItems:
+            sqlStr+=","+item+" FLOAT"
+        
         cur.execute("""
-                    CREATE TABLE FinRptDerivData(StkCode TEXT,
-                                                 AcctPeriod TEXT,
-                                                 DeclareDate TEXT,
-                                                 ReportType INT,
-                                                 IsNewAcctRule INT,
-                                                 IsListed INT
-                                                 {})
+                    CREATE TABLE FinancialPoitInTiemData(StkCode TEXT,
+                                                         AcctPeriod TEXT,
+                                                         DeclareDate TEXT,
+                                                         ReportType INT,
+                                                         IsNewAcctRule INT,
+                                                         IsListed INT
+                                                         {})
                     """.format(sqlStr))
+        
         sqlStr = ""
-        for item in self.items2:
-            itemName = item.__name__.split('.')[-1]
-            sqlStr+=","+itemName+" FLOAT"
+        for item in self.fcstItems:
+            sqlStr+=","+item+" FLOAT"
         cur.execute("""
-                    CREATE TABLE ForecastData(StkCode TEXT,
-                                              AcctPeriod TEXT,
-                                              DeclareDate TEXT
-                                              {})
+                    CREATE TABLE ForecastPointInTImeData(StkCode TEXT,
+                                                         AcctPeriod TEXT,
+                                                         DeclareDate TEXT
+                                                         {})
                     """.format(sqlStr))        
         
     
     #----------------------------------------------------------------------
     def GenerateData(self):
-        """"""
+        """
+        计算并存储基本面即时数据
+        """
         finRptDbPath = self.locDbPath["RawEquity"]+"FinRptData\\FinRptData_Wind_CICC.db"
         mktDataDbPath = self.locDbPath["RawEquity"]+"MktData\\MktData_Wind_CICC.db"
         fdmtData = FdmtData.GetFdmtDerivData(finRptDbPath,mktDataDbPath)
