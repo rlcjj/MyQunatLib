@@ -72,7 +72,7 @@ class BuildFundamentalDatabase(object):
     #----------------------------------------------------------------------
     def CreateDatabase(self,pointInTimeDatabaseName):
         """
-        创立即时基本面数据数据库
+        创立时点基本面数据数据库
         """
         pttDbAddr = self.locDbPath["ProcEquity"]+pointInTimeDatabaseName
         self.pttConn = lite.connect(pttDbAddr)
@@ -107,50 +107,55 @@ class BuildFundamentalDatabase(object):
         
     
     #----------------------------------------------------------------------
-    def GenerateData(self):
+    def GenerateData(self,startDate):
         """
-        计算并存储基本面即时数据
+        计算并存储基本面时点数据
         """
+        #原始财务报表和预测数据数据库地址
         finRptDbPath = self.locDbPath["RawEquity"]+"FinRptData\\FinRptData_Wind_CICC.db"
         mktDataDbPath = self.locDbPath["RawEquity"]+"MktData\\MktData_Wind_CICC.db"
-        fdmtData = FdmtData.GetFdmtDerivData(finRptDbPath,mktDataDbPath)
-        allStks = self.compStks.GetAllStocks(self.indexCode)
         
-        cur = self.indicConn.cursor()
-        lenOfItems = len(self.items1)
+        #创建获取时点数据的类
+        getPTTDataCls = GetPTTData.GetPointInTimeData(finRptDbPath,mktDataDbPath,self.logger)
+        allStkCodes = self.constituentStockCls.GetAllStocksExcludedAfterGivenDate(startDate,self.constituentIndexCode)
+        
+        #处理财务报表数据
+        cur = self.pttConn.cursor()
+        lenOfItems = len(self.finItems)
         insertSql = "?,?,?,?,?,?"+lenOfItems*",?"
-        for stk in allStks:
+        for stk in allStkCodes:
             print stk
-            date = self.compStks.GetIncludeAndExcludeDate(stk,self.indexCode)
+            date = self.constituentStockCls.GetStockIncludedAndExcludedDate(stk,self.constituentIndexCode)
             begDate = date[0][0]
             endDate = date[-1][1]
-            rptDeclareDate = fdmtData.GetFinDataDeclareDate(stk,begDate,endDate)
+            rptDeclareDate = getPTTDataCls.GetFinancialReportDeclareDate(stk,begDate,endDate)
             for dt in rptDeclareDate:
-                itemVals = fdmtData.CalcFinRptDerivData(dt,300,stk,self.items1)
+                itemVals = getPTTDataCls.ProcessFinancialData(dt,300,stk,self.finItems)
                 if itemVals!=None:
                     row = [stk,itemVals[0],dt,itemVals[1],itemVals[2],itemVals[3]]
                     for itemVal in itemVals[4]:
                         row.append(itemVal)
                     cur.execute("INSERT INTO FinRptDerivData VALUES ({})".format(insertSql),tuple(row))
-        self.indicConn.commit()
+        self.pttConn.commit()
         
-        cur = self.indicConn.cursor()
+        #处理预测报告数据
+        cur = self.pttConn.cursor()
         lenOfItems = len(self.items2)
         insertSql = "?,?,?"+lenOfItems*",?"
-        for stk in allStks:
+        for stk in allStkCodes:
             print stk
-            date = self.compStks.GetIncludeAndExcludeDate(stk,self.indexCode)
+            date = self.compStks.GetIncludedAndExcludedDate(stk,self.constituentIndexCode)
             begDate = date[0][0]
             endDate = date[-1][1]
-            rptDeclareDate = fdmtData.GetForecastDataDeclareDate(stk,begDate,endDate)
+            rptDeclareDate = getPTTDataCls.GetForecastReportDeclareDate(stk,begDate,endDate)
             for dt in rptDeclareDate:
-                itemVals = fdmtData.CalcForecastDerivData(dt,300,stk,self.items2)
+                itemVals = getPTTDataCls.ProcessFinancialData(dt,300,stk,self.fcstItems)
                 if itemVals!=None:
                     row = [stk,itemVals[0],dt]
                     for itemVal in itemVals[1]:
                         row.append(itemVal)
                     cur.execute("INSERT INTO ForecastData VALUES ({})".format(insertSql),tuple(row))
-        self.indicConn.commit()        
+        self.pttConn.commit()        
                     
             
             

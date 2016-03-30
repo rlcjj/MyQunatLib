@@ -71,7 +71,7 @@ class GetIndexConstituentStocks(object):
     
     
     #----------------------------------------------------------------------
-    def GetAllStocksIncludedAfterGivenDate(self,startDate,*indexCode):
+    def GetAllStocksExcludedAfterGivenDate(self,startDate,*indexCode):
         """
         获取给定日期后纳入指数的所有股票(包含已经剔除的)
         """
