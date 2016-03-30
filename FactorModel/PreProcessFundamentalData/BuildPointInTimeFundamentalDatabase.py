@@ -12,28 +12,32 @@ root = os.path.abspath(__file__).split("MyQuantLib")[0]+"MyQuantLib"
 sys.path.append(root)
 import Tools.GetLocalDatabasePath as GetPath
 import DefineInvestUniverse.GetIndexCompStocks as CompStks
-import ProcessRawData.Fundamental.GetFdmtDerivData as FdmtData
+import FactorModel.PreProcessFundamentalData._GetPointInTimeData as GetPTTData
+import Tools.LogOutputHandler as LogHandler
+
 
 ########################################################################
-class ConsolidateData(object):
-    """"""
+class BuildFundamentalDatabase(object):
+    """
+    整合时点财务数据写入本地数据库
+    """
 
     #----------------------------------------------------------------------
-    def __init__(self,logOutputHandler):
+    def __init__(self,logger=None):
         """Constructor"""
-        self.logger = logging.getLogger()
-        self.logger.setLevel(logging.DEBUG)
-        for lh in logOutputHandler:
-            self.logger.addHandler(lh)  
+        #Create log file
+        if logger == None:
+            self.logger = LogHandler.LogOutputHandler("SyncFinRpt.log")
+        else:    
+            self.logger = logger        
         
         self.locDbPath = GetPath.GetLocalDatabasePath()
         
     #----------------------------------------------------------------------
-    def SetStockUniverse(self,dbAddress,indexCode):
+    def SetStockUniverse(self,indexConstituentDatabase,constituentIndexCode):
         """"""
-        self.indexCode = indexCode
-        self.compStks = CompStks.GetIndexCompStocks(dbAddress)
-        self.indexAdjDate = self.compStks.GetIndexAdjustDate(indexCode)        
+        self.constituentIndexCode = constituentIndexCode
+        self.constituentStockCls = CompStks.GetIndexCompStocks(dbAddress)       
 
 
     #----------------------------------------------------------------------

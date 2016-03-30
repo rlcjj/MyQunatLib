@@ -14,30 +14,41 @@ import Tools.GetLocalDatabasePath as GetPath
 
 
 ########################################################################
-class GetIndexCompStocks(object):
-    """"""
+class GetIndexConstituentStocks(object):
+    """
+    获取指数成分股
+    """
 
     #----------------------------------------------------------------------
-    def __init__(self,dbAddress):
+    def __init__(self,dbAddress,logger=None):
         """Constructor"""
+        #Create log file
+        if logger == None:
+            self.logger = LogHandler.LogOutputHandler("SyncFinRpt.log")
+        else:    
+            self.logger = logger             
+        
         locDbPath = GetPath.GetLocalDatabasePath()
         lite.register_adapter(decimal.Decimal, lambda x:str(x))
         self.conn = lite.connect(":memory:")
         cur = self.conn.cursor()
         self.conn.text_factory = str
         cur.execute("ATTACH '{}' AS _IndexComp".format(locDbPath["RawEquity"]+dbAddress))
-        print "Load table IndexComp"
+        self.logger.info("Load table IndexComp")
         cur.execute("CREATE TABLE IndexComp AS SELECT * FROM _IndexComp.IndexComp")
-        print "Load table SWIndustry1st"
+        self.logger.info("Load table SWIndustry1st")
         cur.execute("CREATE TABLE SWIndustry1st AS SELECT * FROM _IndexComp.SWIndustry1st")        
-        print "Create index on IndexComp"
+        self.logger.info("Create index on IndexComp")
         cur.execute("CREATE INDEX idI ON IndexComp (IndexCode,IncDate,ExcDate,StkCode)")
-        print "Create index on SWIndustry1st"
+        self.logger.info("Create index on SWIndustry1st")
         cur.execute("CREATE INDEX idS ON SWIndustry1st (IndusCode,IncDate,ExcDate,StkCode)")
         
+        
     #----------------------------------------------------------------------
-    def GetStocks(self,date,*indexCode):
-        """"""
+    def GetConstituentStocksAtGivenDate(self,date,*indexCode):
+        """
+        获取给定日期指数所包含的的成分股
+        """
         cur = self.conn.cursor()
         sql = """
               SELECT StkCode
@@ -60,8 +71,10 @@ class GetIndexCompStocks(object):
     
     
     #----------------------------------------------------------------------
-    def GetAllStocks(self,startDate,*indexCode):
-        """"""
+    def GetAllStocksIncludedAfterGivenDate(self,startDate,*indexCode):
+        """
+        获取给定日期后纳入指数的所有股票(包含已经剔除的)
+        """
         cur = self.conn.cursor()
         sql = """
                   SELECT DISTINCT StkCode
@@ -84,7 +97,9 @@ class GetIndexCompStocks(object):
             
     #----------------------------------------------------------------------
     def GetIndexAdjustDate(self,*indexCode):
-        """"""
+        """
+        获取指数调整日期
+        """
         cur = self.conn.cursor()
         sql = """
               SELECT DISTINCT IncDate
@@ -103,9 +118,12 @@ class GetIndexCompStocks(object):
             date.append(row[0])
         return date
     
+    
     #----------------------------------------------------------------------
-    def GetIncludeAndExcludeDate(self,stkCode,indexCode):
-        """"""
+    def GetStockIncludedAndExcludedDate(self,stkCode,indexCode):
+        """
+        获取股票纳入指数和剔除出指数日期
+        """
         cur = self.conn.cursor()
         sql = """
               SELECT IncDate,ExcDate
@@ -125,9 +143,12 @@ class GetIndexCompStocks(object):
         else:
             return None
         
+        
     #----------------------------------------------------------------------
     def GetStockNameAndIndustry(self,stkCode,date):
-        """"""
+        """
+        获取股票的中文名和所属行业名称
+        """
         cur = self.conn.cursor()
         sql = """
               SELECT StkName,IndusCode,IndusName

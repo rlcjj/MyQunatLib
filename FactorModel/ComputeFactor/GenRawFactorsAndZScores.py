@@ -84,7 +84,7 @@ class ComputeFactorsAndZScores(object):
     #----------------------------------------------------------------------
     def ComputeFactors(self):
         """"""
-        self.conn = lite.connect(self.procDbPath+self.fctDbName+".db")
+        self.conn = lite.connect(self.procDbPath+self.factorDatabaseName+".db")
         self.conn.text_factory = str
         self.cur = self.conn.cursor()
         self.cur.execute("PRAGMA synchronous = OFF")
@@ -93,20 +93,19 @@ class ComputeFactorsAndZScores(object):
         for item in self.factorNames:
             sqlStr+=','+item+" FLOAT"
         self.cur.execute("""
-                    CREATE TABLE FactorVals(StkCode TEXT,
-                                            StkName TEXT,
-                                            IndusCode TEXT,
-                                            IndusName TEXT,
-                                            Date TEXT,
-                                            AcctPeriod TEXT,
-                                            ReportType TEXT,
-                                            InHS300 INT
-                                            {})
-                    """.format(sqlStr))   
+                         CREATE TABLE FactorVals(StkCode TEXT,
+                                                 StkName TEXT,
+                                                 IndusCode TEXT,
+                                                 IndusName TEXT,
+                                                 Date TEXT,
+                                                 AcctPeriod TEXT,
+                                                 ReportType TEXT,
+                                                 InHS300 INT
+                                                 {})
+                         """.format(sqlStr))   
         
         insertSql = "?,?,?,?,?,?,?,?"+len(self.factorAlgos)*",?"
         for dt in self.revalueDate:
-            tm1 = time.time()
             stkUniver = self.indexCompStks.GetStocks(dt,self.stkUniver)
             hs300 = self.indexCompStks.GetStocks(dt,"000300")
             #zz300 = self.indexCompStks.GetStocks(dt,"000905")
@@ -127,7 +126,6 @@ class ComputeFactorsAndZScores(object):
                         row.append(val)
                     self.cur.execute("INSERT INTO FactorVals VALUES ({})".format(insertSql),tuple(row))
             tm2 = time.time()
-            print dt,tm2-tm1
         self.conn.commit()
         self.cur.execute("CREATE INDEX Id ON FactorVals(Date,StkCode)")
         self.conn.commit()
