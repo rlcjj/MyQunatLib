@@ -48,7 +48,8 @@ class BuildPITFundamentalDatabase(object):
         """
         加载需要预处理的财务报表和预测数据项目
         """
-        itemDirPath = root+"//FactorModel//PreProcessFundamentalData//DataProcessAlgo"
+        
+        itemDirPath = root+"//FactorModel//PreProcessFundamentalData//DataItemToBeProcessed"
         
         finItemFilePath = itemDirPath+"//FinancialReportData"
         self.finItems = []
@@ -56,7 +57,7 @@ class BuildPITFundamentalDatabase(object):
         for f in finItemFiles:
             itemName = f.split('.')
             if itemName[0][0]!='_' and itemName[1]=="py":
-                self.logger.info("Load financial report item {}".format(itemName[0]))
+                self.logger.info("<{}>-Load financial report item {}".format(__name__.split('.')[-1],itemName[0]))
                 self.finItems.append(itemName[0])
         
         fcstItemFilePath = itemDirPath+"//ForecastReportData"
@@ -65,7 +66,7 @@ class BuildPITFundamentalDatabase(object):
         for f in fcstItemFiles:
             itemName = f.split('.')
             if itemName[0][0]!='_' and itemName[1]=="py":
-                self.logger.info("Load forecast report item {}".format(itemName[0]))
+                self.logger.info("<{}>-Load forecast report item {}".format(__name__.split('.')[-1],itemName[0]))
                 self.fcstItems.append(itemName[0])        
 
     
@@ -77,16 +78,16 @@ class BuildPITFundamentalDatabase(object):
         pttDbAddr = self.locDbPath["ProcEquity"]+pointInTimeDatabaseName
         self.pttConn = lite.connect(pttDbAddr)
         cur = self.pttConn.cursor()
-        cur.execute("DROP TABLE IF EXISTS FinancialPontInTimeData")
+        cur.execute("DROP TABLE IF EXISTS FinancialPointInTimeData")
         cur.execute("DROP TABLE IF EXISTS ForecastPointInTimeData")
         cur.execute("PRAGMA synchronous = OFF")
         
-        self.logger.info("Create data table 'FinancialPoitInTiemData'")
+        self.logger.info("<{}>-Create data table 'FinancialPointInTimeData'".format(__name__.split('.')[-1]))
         sqlStr = ""
         for item in self.finItems:
             sqlStr+=","+item+" FLOAT"
         cur.execute("""
-                    CREATE TABLE FinancialPoitInTiemData(StkCode TEXT,
+                    CREATE TABLE FinancialPointInTimeData(StkCode TEXT,
                                                          AcctPeriod TEXT,
                                                          DeclareDate TEXT,
                                                          ReportType INT,
@@ -95,12 +96,12 @@ class BuildPITFundamentalDatabase(object):
                                                          {})
                     """.format(sqlStr))
         
-        self.logger.info("Create data table 'ForecastPointInTImeData'")
+        self.logger.info("<{}>-Create data table 'ForecastPointInTimeData'".format(__name__.split('.')[-1]))
         sqlStr = ""
         for item in self.fcstItems:
             sqlStr+=","+item+" FLOAT"
         cur.execute("""
-                    CREATE TABLE ForecastPointInTImeData(StkCode TEXT,
+                    CREATE TABLE ForecastPointInTimeData(StkCode TEXT,
                                                          AcctPeriod TEXT,
                                                          DeclareDate TEXT
                                                          {})
