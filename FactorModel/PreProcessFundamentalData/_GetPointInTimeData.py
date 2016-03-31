@@ -170,14 +170,12 @@ class GetPointInTimeData(object):
         """
         初步处理预测数据，获取公布时间点最新数据，并根据算法简单计算
         """
-        tm1 = time.time()
         cur = self.conn.cursor()
         derivData = []
         for item in items:
             exec("import FactorModel.PreProcessFundamentalData.ForecastReportData.{} as _item".format(item))
             _derivData = _item.Calc(cur,lookupDate,"",stkCode)
             derivData.append(_derivData)
-        tm2 = time.time()
         thisAcctYear = lookupDate[0:4]+"1231"
         #print "Time consume:{}".format(tm2-tm1)
         return thisAcctYear,derivData    

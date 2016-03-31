@@ -12,12 +12,12 @@ root = os.path.abspath(__file__).split("MyQuantLib")[0]+"MyQuantLib"
 sys.path.append(root)
 import Tools.GetLocalDatabasePath as GetPath
 import InvestmentUniverse.GetIndexConstituentStocks as GetIndexConstituentStocks
-import FactorModel.PreProcessFundamentalData._GetPointInTimeData as GetPTTData
+import FactorModel.PreProcessFundamentalData._GetPointInTimeData as GetPITData
 import Tools.LogOutputHandler as LogHandler
 
 
 ########################################################################
-class BuildFundamentalDatabase(object):
+class BuildPITFundamentalDatabase(object):
     """
     整合时点财务数据写入本地数据库
     """
@@ -40,7 +40,7 @@ class BuildFundamentalDatabase(object):
         确定股票投资范围
         """
         self.constituentIndexCode = constituentIndexCode
-        self.constituentStockCls = GetIndexConstituentStocks.GetIndexConstituentStocks(dbAddress,self.logger)       
+        self.objConstituentStocks = GetIndexConstituentStocks.GetIndexConstituentStocks(indexConstituentDatabase,self.logger)       
 
 
     #----------------------------------------------------------------------
@@ -117,8 +117,8 @@ class BuildFundamentalDatabase(object):
         mktDataDbPath = self.locDbPath["RawEquity"]+"MktData\\MktData_Wind_CICC.db"
         
         #创建获取时点数据的类
-        getPTTDataCls = GetPTTData.GetPointInTimeData(finRptDbPath,mktDataDbPath,self.logger)
-        allStkCodes = self.constituentStockCls.GetAllStocksExcludedAfterGivenDate(startDate,self.constituentIndexCode)
+        getPITDataCls = GetPITData.GetPointInTimeData(finRptDbPath,mktDataDbPath,self.logger)
+        allStkCodes = self.objConstituentStocks.GetAllStocksExcludedAfterGivenDate(startDate,self.constituentIndexCode)
         
         #处理财务报表数据
         cur = self.pttConn.cursor()
@@ -126,12 +126,12 @@ class BuildFundamentalDatabase(object):
         insertSql = "?,?,?,?,?,?"+lenOfItems*",?"
         for stk in allStkCodes:
             self.logger.info("Process financial report data - stock code {}".format(stk))
-            date = self.constituentStockCls.GetStockIncludedAndExcludedDate(stk,self.constituentIndexCode)
+            date = self.objConstituentStocks.GetStockIncludedAndExcludedDate(stk,self.constituentIndexCode)
             begDate = date[0][0]
             endDate = date[-1][1]
-            rptDeclareDate = getPTTDataCls.GetFinancialReportDeclareDate(stk,begDate,endDate)
+            rptDeclareDate = getPITDataCls.GetFinancialReportDeclareDate(stk,begDate,endDate)
             for dt in rptDeclareDate:
-                itemVals = getPTTDataCls.ProcessFinancialData(dt,300,stk,self.finItems)
+                itemVals = getPITDataCls.ProcessFinancialData(dt,300,stk,self.finItems)
                 if itemVals!=None:
                     row = [stk,itemVals[0],dt,itemVals[1],itemVals[2],itemVals[3]]
                     for itemVal in itemVals[4]:
@@ -148,9 +148,9 @@ class BuildFundamentalDatabase(object):
             date = self.compStks.GetIncludedAndExcludedDate(stk,self.constituentIndexCode)
             begDate = date[0][0]
             endDate = date[-1][1]
-            rptDeclareDate = getPTTDataCls.GetForecastReportDeclareDate(stk,begDate,endDate)
+            rptDeclareDate = getPITDataCls.GetForecastReportDeclareDate(stk,begDate,endDate)
             for dt in rptDeclareDate:
-                itemVals = getPTTDataCls.ProcessFinancialData(dt,300,stk,self.fcstItems)
+                itemVals = getPITDataCls.ProcessFinancialData(dt,300,stk,self.fcstItems)
                 if itemVals!=None:
                     row = [stk,itemVals[0],dt]
                     for itemVal in itemVals[1]:

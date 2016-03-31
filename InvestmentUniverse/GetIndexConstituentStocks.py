@@ -34,13 +34,13 @@ class GetIndexConstituentStocks(object):
         cur = self.conn.cursor()
         self.conn.text_factory = str
         cur.execute("ATTACH '{}' AS _IndexComp".format(locDbPath["RawEquity"]+dbAddress))
-        self.logger.info("Load table IndexComp")
+        self.logger.info("Module {}-Load data table IndexConstituent".format(__name__).split('.')[-1])
         cur.execute("CREATE TABLE IndexComp AS SELECT * FROM _IndexComp.IndexComp")
-        self.logger.info("Load table SWIndustry1st")
+        self.logger.info("Module {}-Load table sywg industry classification".format(__name__).split('.')[-1])
         cur.execute("CREATE TABLE SWIndustry1st AS SELECT * FROM _IndexComp.SWIndustry1st")        
-        self.logger.info("Create index on IndexComp")
+        self.logger.info("Module {}-Create index on table IndexConstituent".format(__name__).split('.')[-1])
         cur.execute("CREATE INDEX idI ON IndexComp (IndexCode,IncDate,ExcDate,StkCode)")
-        self.logger.info("Create index on SWIndustry1st")
+        self.logger.info("Module {}-Create index on table sywg industry classification".format(__name__).split('.')[-1])
         cur.execute("CREATE INDEX idS ON SWIndustry1st (IndusCode,IncDate,ExcDate,StkCode)")
         
         
