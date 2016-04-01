@@ -109,7 +109,7 @@ class BuildPITFundamentalDatabase(object):
         
     
     #----------------------------------------------------------------------
-    def GenerateData(self,startDate):
+    def CalculateAndSaveData(self,startDate):
         """
         计算并存储基本面时点数据
         """
@@ -126,7 +126,7 @@ class BuildPITFundamentalDatabase(object):
         lenOfItems = len(self.finItems)
         insertSql = "?,?,?,?,?,?"+lenOfItems*",?"
         for stk in allStkCodes:
-            self.logger.info("Process financial report data - stock code {}".format(stk))
+            self.logger.info("<{}>-Process financial report data - stock code {}".format(__name__.split('.')[-1],stk))
             date = self.objConstituentStocks.GetStockIncludedAndExcludedDate(stk,self.constituentIndexCode)
             begDate = date[0][0]
             endDate = date[-1][1]
@@ -137,26 +137,26 @@ class BuildPITFundamentalDatabase(object):
                     row = [stk,itemVals[0],dt,itemVals[1],itemVals[2],itemVals[3]]
                     for itemVal in itemVals[4]:
                         row.append(itemVal)
-                    cur.execute("INSERT INTO FinRptDerivData VALUES ({})".format(insertSql),tuple(row))
+                    cur.execute("INSERT INTO FinancialPointInTimeData VALUES ({})".format(insertSql),tuple(row))
         self.pttConn.commit()
         
         #处理预测报告数据
         cur = self.pttConn.cursor()
-        lenOfItems = len(self.items2)
+        lenOfItems = len(self.fcstItems)
         insertSql = "?,?,?"+lenOfItems*",?"
         for stk in allStkCodes:
-            self.logger.info("Process forecast report data - stock code {}".format(stk))
-            date = self.compStks.GetIncludedAndExcludedDate(stk,self.constituentIndexCode)
+            self.logger.info("<{}>-Process forecast report data - stock code {}".format(__name__.split('.')[-1],stk))
+            date = self.objConstituentStocks.GetStockIncludedAndExcludedDate(stk,self.constituentIndexCode)
             begDate = date[0][0]
             endDate = date[-1][1]
             rptDeclareDate = getPITDataCls.GetForecastReportDeclareDate(stk,begDate,endDate)
             for dt in rptDeclareDate:
-                itemVals = getPITDataCls.ProcessFinancialData(dt,300,stk,self.fcstItems)
+                itemVals = getPITDataCls.ProcessForecastData(dt,300,stk,self.fcstItems)
                 if itemVals!=None:
                     row = [stk,itemVals[0],dt]
                     for itemVal in itemVals[1]:
                         row.append(itemVal)
-                    cur.execute("INSERT INTO ForecastData VALUES ({})".format(insertSql),tuple(row))
+                    cur.execute("INSERT INTO ForecastPointInTimeData VALUES ({})".format(insertSql),tuple(row))
         self.pttConn.commit()        
                     
             

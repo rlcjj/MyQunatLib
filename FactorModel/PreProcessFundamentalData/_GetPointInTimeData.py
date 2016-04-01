@@ -34,12 +34,12 @@ class GetPointInTimeData(object):
         else:    
             self.logger = logger
         
-        self.logger.info("Create in-memory database")
+        self.logger.info("<{}>-Create in-memory database".format(__name__.split('.')[-1]))
         self.conn = lite.connect(":memory:")
         self.conn.text_factory = str
         cur = self.conn.cursor()
         
-        self.logger.info("Load local database into in-memory database")
+        self.logger.info("<{}>-Load local database into in-memory database".format(__name__.split('.')[-1]))
         cur.execute("ATTACH '{}' AS FinRpt".format(finRptDbPath))
         cur.execute("ATTACH '{}' AS MktData".format(mktDataDbPath))
         cur.execute("CREATE TABLE BalanceSheet AS SELECT * FROM FinRpt.BalanceSheet")
@@ -47,15 +47,15 @@ class GetPointInTimeData(object):
         cur.execute("CREATE TABLE CashFlowStatement AS SELECT * FROM FinRpt.CashFlowStatement")
         cur.execute("CREATE TABLE ForecastData AS SELECT * FROM FinRpt.ForecastData")        
         cur.execute("CREATE TABLE Dividend AS SELECT * FROM MktData.Dividend")
-        self.logger.info("Finished")
+        self.logger.info("<{}>-Finished".format(__name__.split('.')[-1]))
         
-        self.logger.info("Create index on in-memory database")
+        self.logger.info("<{}>-Create index on in-memory database".format(__name__.split('.')[-1]))
         cur.execute("CREATE INDEX Id1 ON BalanceSheet (StkCode,RPT_DATE,RDeclareDate)")
         cur.execute("CREATE INDEX Id2 ON IncomeStatement (StkCode,RPT_DATE,RDeclareDate)")
         cur.execute("CREATE INDEX Id3 ON CashFlowStatement (StkCode,RPT_DATE,RDeclareDate)")
         cur.execute("CREATE INDEX IdF ON ForecastData (StkCode,RPT_DATE,RDeclareDate)")
         cur.execute("CREATE INDEX IdD ON Dividend (StkCode,RDeclareDate)")
-        self.logger.info("Finished")
+        self.logger.info("<{}>-Finished".format(__name__.split('.')[-1]))
     
     
     #----------------------------------------------------------------------
@@ -152,14 +152,14 @@ class GetPointInTimeData(object):
               ORDER BY RPT_DATE+RDeclareDate DESC LIMIT 1
               """
         cur.execute(sql.format(stkCode,lookupLimit,lookupDate,lookupDate))
-        MyPrint(sql.format(stkCode,lookupLimit,lookupDate,lookupDate))
+        #MyPrint(sql.format(stkCode,lookupLimit,lookupDate,lookupDate))
         content = cur.fetchone()
         if content==None:
             return None
         rptInfo = content
         derivData = []
         for item in items:
-            exec("import FactorModel.PreProcessFundamentalData.FinancialReportData.{} as _item".format(item))
+            exec("import FactorModel.PreProcessFundamentalData.DataItemToBeProcessed.FinancialReportData.{} as _item".format(item))
             _derivData = _item.Calc(cur,lookupDate,rptInfo,stkCode)
             derivData.append(_derivData)
         return rptInfo[0],rptInfo[1],rptInfo[2],rptInfo[3],derivData
@@ -173,7 +173,7 @@ class GetPointInTimeData(object):
         cur = self.conn.cursor()
         derivData = []
         for item in items:
-            exec("import FactorModel.PreProcessFundamentalData.ForecastReportData.{} as _item".format(item))
+            exec("import FactorModel.PreProcessFundamentalData.DataItemToBeProcessed.ForecastReportData.{} as _item".format(item))
             _derivData = _item.Calc(cur,lookupDate,"",stkCode)
             derivData.append(_derivData)
         thisAcctYear = lookupDate[0:4]+"1231"
