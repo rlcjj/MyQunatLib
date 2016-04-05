@@ -76,8 +76,8 @@ class BuildPITFundamentalDatabase(object):
         创立时点基本面数据数据库
         """
         pttDbAddr = self.locDbPath["ProcEquity"]+pointInTimeDatabaseName
-        self.pttConn = lite.connect(pttDbAddr)
-        cur = self.pttConn.cursor()
+        self.pitConn = lite.connect(pttDbAddr)
+        cur = self.pitConn.cursor()
         cur.execute("DROP TABLE IF EXISTS FinancialPointInTimeData")
         cur.execute("DROP TABLE IF EXISTS ForecastPointInTimeData")
         cur.execute("PRAGMA synchronous = OFF")
@@ -122,7 +122,7 @@ class BuildPITFundamentalDatabase(object):
         allStkCodes = self.objConstituentStocks.GetAllStocksExcludedAfterGivenDate(startDate,self.constituentIndexCode)
         
         #处理财务报表数据
-        cur = self.pttConn.cursor()
+        cur = self.pitConn.cursor()
         lenOfItems = len(self.finItems)
         insertSql = "?,?,?,?,?,?"+lenOfItems*",?"
         for stk in allStkCodes:
@@ -138,10 +138,10 @@ class BuildPITFundamentalDatabase(object):
                     for itemVal in itemVals[4]:
                         row.append(itemVal)
                     cur.execute("INSERT INTO FinancialPointInTimeData VALUES ({})".format(insertSql),tuple(row))
-        self.pttConn.commit()
+        self.pitConn.commit()
         
         #处理预测报告数据
-        cur = self.pttConn.cursor()
+        cur = self.pitConn.cursor()
         lenOfItems = len(self.fcstItems)
         insertSql = "?,?,?"+lenOfItems*",?"
         for stk in allStkCodes:
@@ -157,7 +157,7 @@ class BuildPITFundamentalDatabase(object):
                     for itemVal in itemVals[1]:
                         row.append(itemVal)
                     cur.execute("INSERT INTO ForecastPointInTimeData VALUES ({})".format(insertSql),tuple(row))
-        self.pttConn.commit()        
+        self.pitConn.commit()        
                     
             
             
