@@ -8,20 +8,25 @@
 
 import os,sys,logging ,time,decimal,codecs,numpy,re
 import sqlite3 as lite
-import time
 from datetime import datetime,timedelta
+from ConfigParser import ConfigParser
+
 root = os.path.abspath(__file__).split("MyQuantLib")[0]+"MyQuantLib"
 sys.path.append(root)
 import Tools.GetLocalDatabasePath as GetPath
 import Tools.GetTradeDays as GetTrdDay
-import Tools.Draw as Draw
-import FactorAlgos.CalcFactorVals as CalcFactorVals
-import DefineInvestUniverse.GetIndexCompStocks as IndexCompStks
-from ConfigParser import ConfigParser
+import FactorModels.ComputeFundamentalFactors._CalculateFactorValues as CalcFactorVals
+import InvestmentUniverse.GetIndexConstituentStocks as GetIndexConstituentStocks
+import Tools.LogOutputHandler as LogHandler
+
 
 ########################################################################
 class ComputeFactorsAndZScores(object):
-    """"""
+    """
+    计算给定投资空间中的所有股票
+    基本面因子值并在横截面做标准化
+    处理转换成ZScores
+    """
     
     #----------------------------------------------------------------------
     def __init__(self,logger=None):
@@ -32,15 +37,17 @@ class ComputeFactorsAndZScores(object):
         else:    
             self.logger = logger
             
-        localProcDataDBPath = GetPath.GetLocalDatabasePath()["ProcEquity"]
-        self.procDbPath = localProcDataDBPath
+        dbPathProcessedData = GetPath.GetLocalDatabasePath()["ProcEquity"]
+        self.dbPathProcessedData = dbPathProcessedData
         self.totalTradeDay = GetTrdDay.GetTradeDays()   
+        
 
     #----------------------------------------------------------------------
-    def LoadSourceData(self,finRptDataDbAddr,mktDataDbAddr,indexCompStksDataDbAddr):
+    def LoadSourceData(self,dbPathFdmtData,dbPathMktData,dbPathConstituentStocks):
         """"""
-        self.indexCompStks = IndexCompStks.GetIndexCompStocks(indexCompStksDataDbAddr) 
-        self.calcFactorVals = CalcFactorVals.CalcFactorVals(finRptDataDbAddr,mktDataDbAddr)
+        self.indexCompStks = GetIndexConstituentStocks.GetIndexConstituentStocks(dbPathConstituentStocks,self.logger) 
+        self.objCalcFactorVals = CalcFactorVals.CalculateFactorValues(dbPathFdmtData,dbPathMktData)
+        
         
     #----------------------------------------------------------------------
     def SetStockUniverseAndFactorReCalcDate(self,stockUnviverIndex,begDate,endDate,holdingPeriod):
@@ -84,7 +91,7 @@ class ComputeFactorsAndZScores(object):
     #----------------------------------------------------------------------
     def ComputeFactors(self):
         """"""
-        self.conn = lite.connect(self.procDbPath+self.factorDatabaseName+".db")
+        self.conn = lite.connect(self.dbPathProcessedData+self.factorDatabaseName+".db")
         self.conn.text_factory = str
         self.cur = self.conn.cursor()
         self.cur.execute("PRAGMA synchronous = OFF")
@@ -114,7 +121,7 @@ class ComputeFactorsAndZScores(object):
                     inHS300 = 1
                 else:
                     inHS300 = 0                    
-                vals = self.calcFactorVals.Calc(dt,180,stk,self.factorAlgos)
+                vals = self.objCalcFactorVals.Calc(dt,180,stk,self.factorAlgos)
                 stkInfo = self.indexCompStks.GetStockNameAndIndustry(stk,dt)
                 #print stk,stkInfo[0].decode('utf-8'),stkInfo[1],stkInfo[2]
                 if vals!=None and vals[-1]!=None:
@@ -140,7 +147,7 @@ class ComputeFactorsAndZScores(object):
         conf.read(configPath)
         print conf.sections()
         indusList = conf.items(classification)
-        conn = lite.connect(self.procDbPath+self.fctDbName+".db")
+        conn = lite.connect(self.dbPathProcessedData+self.fctDbName+".db")
         conn.text_factory = str
         cur = conn.cursor()
         
@@ -182,9 +189,8 @@ class ComputeFactorsAndZScores(object):
         cur.execute("CREATE INDEX Id2 ON ZScores(Date,StkCode)")
         conn.commit()        
         tm2 = time.time()
-        print tm2-tm1
-            #for row in rows:
-            #    print len(row)
+
+
     #----------------------------------------------------------------------
     def Winsorize(self,mat,std):
         """"""
@@ -197,18 +203,3 @@ class ComputeFactorsAndZScores(object):
         return _mat
 
         
-        
-            
-        
-        
-
-if __name__ == "__main__":
-    dbPath1 = "FumdamentalDerivData.db"
-    dbPath2 = "MktData\\MktData_Wind_CICC.db"   
-    dbPath3 = "MktGenInfo\\IndexComp_Wind_CICC.db"    
-    GFctZScore = GenRawFactorsAndZScoresDatabase()
-    GFctZScore.LoadSourceData(dbPath1,dbPath2,dbPath3)
-    GFctZScore.SetStockUniverseAndRevalueDate("399906","20070101","20151231",10)
-    GFctZScore.LoadFactorAlgos("FdmtFactors.Growth","FdmtFactors.Profitability","FdmtFactors.Quality","FdmtFactors.Value","TechnicalFactors")
-    GFctZScore.GenRawFactors()
-    #GFctZScore.RawFactors2ZScores("000300","Industry.cfg","SW1_ZZ500")
