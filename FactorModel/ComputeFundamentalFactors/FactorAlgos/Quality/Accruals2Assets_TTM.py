@@ -20,7 +20,7 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
 
     sql = """
           SELECT Accruals_TTM*2/(TotalAssets+TotalAssets_1Y_Ago)
-          FROM FinRptDerivData
+          FROM FinancialPITData
           WHERE StkCode='{}'
                 AND DeclareDate>='{}'
                 AND DeclareDate<='{}'

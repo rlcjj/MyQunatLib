@@ -20,7 +20,7 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
     
     sql = """
           SELECT AcctPeriod,NetProfits2Parent
-          FROM FinRptDerivData
+          FROM FinancialPITData
           WHERE StkCode='{}'
                 AND SUBSTR(AcctPeriod,5,4)='1231'
                 AND DeclareDate<='{}'
@@ -37,7 +37,7 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
     
     sql = """
           SELECT DeclareDate,ForecastThisYearEPS
-          FROM FcstData
+          FROM ForecastPITData
           WHERE StkCode='{}'
               AND AcctPeriod='{}'
               AND DeclareDate<='{}'

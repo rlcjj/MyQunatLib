@@ -13,6 +13,7 @@ from datetime import datetime,timedelta
 root = os.path.abspath(__file__).split("MyQuantLib")[0]+"MyQuantLib"
 sys.path.append(root)
 import Tools.GetLocalDatabasePath as GetPath
+import Tools.LogOutputHandler as LogHandler
 
 
 ########################################################################
@@ -50,10 +51,10 @@ class CalculateFactorValues(object):
             cur.execute("CREATE TABLE FinancialPITData AS SELECT * FROM FdmtData.FinancialPointInTimeData")
             self.logger.info("<{}>-Done".format(__name__.split('.')[-1]))
             self.logger.info("<{}>-Load table ForecastPintInTimeData".format(__name__.split('.')[-1]))
-            cur.execute("CREATE TABLE ForecastPITData AS SELECT * FROM FdmtData.ForecastPintInTimeData")
+            cur.execute("CREATE TABLE ForecastPITData AS SELECT * FROM FdmtData.ForecastPointInTimeData")
             self.logger.info("<{}>-Done".format(__name__.split('.')[-1]))
             self.logger.info("<{}>-Load table MarketData".format(__name__.split('.')[-1]))
-            cur.execute("CREATE TABLE MktData AS SELECT StkCode,Date,TC,LC,TC_Adj FROM MktData.A_Share_Data WHERE Date>='20060101'")
+            cur.execute("CREATE TABLE MktData AS SELECT StkCode,Date,TC,LC,TC_Adj FROM MktData.AStockData WHERE Date>='20060101'")
             self.logger.info("<{}>-Done".format(__name__.split('.')[-1]))
             self.logger.info("<{}>-Load talbe MarketCap".format(__name__.split('.')[-1]))
             cur.execute("CREATE TABLE MktCap AS SELECT * FROM MktData.MarketCap")
@@ -68,13 +69,13 @@ class CalculateFactorValues(object):
             self.logger.info("<{}>-Create index on table MarketData".format(__name__.split('.')[-1]))
             cur.execute("CREATE INDEX mId ON MktData (StkCode,Date)")
             self.logger.info("<{}>-Done".format(__name__.split('.')[-1]))
-            self.logger.info("<{}>-Crate index on table MarketCap".format(__name__.split('.')[-1]))
+            self.logger.info("<{}>-Create index on table MarketCap".format(__name__.split('.')[-1]))
             cur.execute("CREATE INDEX cId ON MktCap (StkCode,Date)")
             self.logger.info("<{}>-Done".format(__name__.split('.')[-1]))            
     
     
     #----------------------------------------------------------------------
-    def CalculateAndSaveData(self,factorValDate,rptEffectiveDays,stkCode,factorAlgos):
+    def Calculate(self,factorValDate,rptEffectiveDays,stkCode,factorAlgos):
         """
         计算并储存
         """
@@ -87,9 +88,9 @@ class CalculateFactorValues(object):
         
         begDate = date[0] 
         endDate = date[1]    
-        
-        self.logger.info("<{}>-Calculating factor value of stock {} at {}".format(__name__.split('.')[-1]),stkCode,factorValDate) 
-
+        #tm1 = time.time()
+        self.logger.info("<{}>-Calculating factor value of stock {} at {}".format(__name__.split('.')[-1],stkCode,factorValDate))
+        #tm1 = time.time()
         sql = """
               SELECT TC
               FROM MktData
@@ -103,7 +104,7 @@ class CalculateFactorValues(object):
         if content==None:
             return None
         p = content[0]    
-    
+        #tm2 = time.time()
         sql = """
               SELECT TotCap
               FROM MktCap
@@ -116,7 +117,7 @@ class CalculateFactorValues(object):
         if content==None:
             return None  
         s = content[0]     
-        
+        #tm3 = time.time()
         sql = """
               SELECT DISTINCT AcctPeriod,ReportType
               FROM FinancialPITData
@@ -130,11 +131,14 @@ class CalculateFactorValues(object):
             return None
         acctPeriods = content[0]
         rptType = content[1]
-        
-        self.logger.info("<{}>-Basic info [Price:{},Capital:{},FinacialYear:{},ReportType:{}]".format(__name__.split('.')[-1]),p,s,acctPeriods,rptType)    
-        
+        #tm4 = time.time()
+        self.logger.info("<{}>-Basic info [Price:{},Capital:{},FinacialYear:{},ReportType:{}]".format(__name__.split('.')[-1],p,s,acctPeriods,rptType))    
+        #print tm3-tm2,tm3-tm2,tm2-tm1
         factorVals = []
         for algo in factorAlgos:
+            #tm1 = time.time()
             factorVal = algo.Calc(cur,acctPeriods,p,s,date,stkCode)
+            #tm2 =time.time()
+            #print tm2-tm1
             factorVals.append(factorVal)
         return acctPeriods,rptType,factorVals  

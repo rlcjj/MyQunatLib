@@ -20,7 +20,7 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
 
     sql = """
           SELECT Accruals_TTM/ABS(NetProfits2Parent_TTM)
-          FROM FinRptDerivData
+          FROM FinancialPITData
           WHERE StkCode='{}'
                 AND DeclareDate>='{}'
                 AND DeclareDate<='{}'

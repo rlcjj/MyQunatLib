@@ -19,7 +19,7 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
     
     sql = """
           SELECT CFO_TTM/Sales_TTM-CFO_TTM_1Y_Ago/Sales_TTM_1Y_Ago
-          FROM FinRptDerivData
+          FROM FinancialPITData
           WHERE StkCode='{}'
                 AND DeclareDate>='{}'
                 AND DeclareDate<='{}'

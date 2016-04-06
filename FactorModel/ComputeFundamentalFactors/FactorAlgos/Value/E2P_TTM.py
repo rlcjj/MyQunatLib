@@ -20,7 +20,7 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
     
     sql = """
           SELECT NetProfits2Parent
-          FROM FinRptDerivData
+          FROM FinancialPITData
           WHERE StkCode='{}'
                 AND DeclareDate>='{}'
                 AND DeclareDate<='{}'

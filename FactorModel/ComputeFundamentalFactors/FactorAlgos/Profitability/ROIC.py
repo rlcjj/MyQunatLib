@@ -20,7 +20,7 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
     
     sql = """
           SELECT NOPAT/(InvestedCapital2)
-          FROM FinRptDerivData
+          FROM FinancialPITData
           WHERE StkCode='{}'
                 AND DeclareDate>='{}'
                 AND DeclareDate<='{}'

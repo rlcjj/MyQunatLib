@@ -19,7 +19,7 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
     
     sql = """
           SELECT EBIT_TTM/InterestExpense_TTM
-          FROM FinRptDerivData
+          FROM FinancialPITData
           WHERE StkCode='{}'
                 AND DeclareDate>='{}'
                 AND DeclareDate<='{}'

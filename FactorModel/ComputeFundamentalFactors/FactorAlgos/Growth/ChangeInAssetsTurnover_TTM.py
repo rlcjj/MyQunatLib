@@ -21,7 +21,7 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
     
     sql = """
           SELECT Sales_TTM*2/(TotalAssets+IFNULL(TotalAssets_1Y_Ago,TotalAssets)) / (Sales_TTM_1Y_Ago*2/(TotalAssets_1Y_Ago+IFNULL(TotalAssets_2Y_Ago,TotalAssets_1Y_Ago)))
-          FROM FinRptDerivData 
+          FROM FinancialPITData
           WHERE StkCode='{}'
                 AND DeclareDate>='{}'
                 AND DeclareDate<='{}'

@@ -35,12 +35,12 @@ class BuildPITFundamentalDatabase(object):
         
         
     #----------------------------------------------------------------------
-    def SetStockUniverse(self,indexConstituentDatabase,constituentIndexCode):
+    def SetStockUniverse(self,dbPathIndexConstituents,constituentIndexCode):
         """
         确定股票投资范围
         """
         self.constituentIndexCode = constituentIndexCode
-        self.objConstituentStocks = GetIndexConstituentStocks.GetIndexConstituentStocks(indexConstituentDatabase,self.logger)       
+        self.objConstituentStocks = GetIndexConstituentStocks.GetIndexConstituentStocks(dbPathIndexConstituents,self.logger)       
 
 
     #----------------------------------------------------------------------

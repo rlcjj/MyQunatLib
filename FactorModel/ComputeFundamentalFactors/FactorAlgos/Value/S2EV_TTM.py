@@ -23,7 +23,7 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
                 -Cash
                 +IFNULL(PreferStock,0)
                 +IFNULL(Eqty2Minor,0)
-          FROM FinRptDerivData
+          FROM FinancialPITData
           WHERE StkCode='{}'
                 AND DeclareDate>='{}'
                 AND DeclareDate<='{}'

@@ -20,7 +20,7 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
 
     sql = """
           SELECT (DeferredTaxNetLiab-DeferredTaxNetLiab_1Y_Ago)/TotalAssets
-          FROM FinRptDerivData
+          FROM FinancialPITData
           WHERE StkCode='{}'
                 AND DeclareDate>='{}'
                 AND DeclareDate<='{}'

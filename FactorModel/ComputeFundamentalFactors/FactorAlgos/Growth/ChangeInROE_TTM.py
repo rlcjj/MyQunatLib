@@ -19,7 +19,7 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
     
     sql = """
           SELECT NetProfits2Parent_TTM*2/(Eqty2Parent+IFNULL(Eqty2Parent_1Y_Ago,Eqty2Parent))/(NetProfits2Parent_TTM_1Y_Ago*2/(Eqty2Parent_1Y_Ago+IFNULL(Eqty2Parent_2Y_Ago,Eqty2Parent_1Y_Ago)))
-          FROM FinRptDerivData
+          FROM FinancialPITData
           WHERE StkCode='{}'
                 AND DeclareDate>='{}'
                 AND DeclareDate<='{}'

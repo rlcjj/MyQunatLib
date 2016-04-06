@@ -20,7 +20,7 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
 
     sql = """
           SELECT NetProfitsTotal*2/(TotalAssets+IFNULL(TotalAssets_1Y_Ago,TotalAssets))
-          FROM FinRptDerivData
+          FROM FinancialPITData
           WHERE StkCode='{}'
                 AND DeclareDate>='{}'
                 AND DeclareDate<='{}'

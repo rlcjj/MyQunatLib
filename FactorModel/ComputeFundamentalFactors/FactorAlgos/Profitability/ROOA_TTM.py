@@ -19,7 +19,7 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
 
     sql = """
           SELECT NOPAT_TTM/OperatingAssets
-          FROM FinRptDerivData
+          FROM FinancialPITData
           WHERE StkCode='{}'
                 AND DeclareDate>='{}'
                 AND DeclareDate<='{}'

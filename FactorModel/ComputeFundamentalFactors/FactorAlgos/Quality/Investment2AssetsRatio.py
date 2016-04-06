@@ -20,7 +20,7 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
 
     sql = """
           SELECT (FixedAssets-FixedAssets_1Y_Ago+Inventory-Inventory_1Y_Ago)/TotalAssets_1Y_Ago
-          FROM FinRptDerivData
+          FROM FinancialPITData
           WHERE StkCode='{}'
                 AND DeclareDate>='{}'
                 AND DeclareDate<='{}'

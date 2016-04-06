@@ -33,7 +33,7 @@ def Calc(cur,acctPeriods,p,s,date,stkCode):
     sql = """
           SELECT ForecastThisYearEPS*{}
                 +ForecastNextYearEPS*{}
-          FROM FcstData
+          FROM ForecastPITData
           WHERE StkCode='{}'
                 AND DeclareDate>='{}'
                 AND DeclareDate<='{}'
