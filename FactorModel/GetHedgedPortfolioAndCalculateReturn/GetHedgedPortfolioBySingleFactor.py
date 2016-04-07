@@ -113,7 +113,7 @@ class GetHedgedPortfolioBySingleFactor(object):
         benchmarkReturn = []
         longPort = []
         shortPort = []
-        #benchMarkPort = []
+        benchMarkPort = []
         for dt in self.trdDays:
             if dt in self.revalueDays:
                 stks = self.SortStocksByFactorValue(dt,InHS300,factorName,tableName,order,excludeIndus)
