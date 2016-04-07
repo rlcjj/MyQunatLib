@@ -11,8 +11,6 @@ import sqlite3 as lite
 from datetime import datetime,timedelta
 from ConfigParser import ConfigParser
 
-root = os.path.abspath(__file__).split("MyQuantLib")[0]+"MyQuantLib"
-sys.path.append(root)
 import Tools.GetLocalDatabasePath as GetPath
 import Tools.GetTradeDays as GetTrdDay
 import FactorModel.ComputeFundamentalFactors._CalculateFactorValues as CalcFactorVals

@@ -13,7 +13,7 @@ sys.path.append(root)
 import FactorAlgos.CalcFactorVals as GetVal
 
 ########################################################################
-class SelectStksByFctVals:
+class SortStocksByFactors(object):
     """"""
 
     #----------------------------------------------------------------------

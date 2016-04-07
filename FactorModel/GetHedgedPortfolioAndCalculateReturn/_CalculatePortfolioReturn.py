@@ -6,37 +6,42 @@
   Created: 2015/12/17
 """
 
-import os,sys,logging ,time,decimal,codecs
+import os,sys,logging,time,decimal,codecs
+import numpy as np
 import sqlite3 as lite
 import time
 from datetime import datetime,timedelta
-root = os.path.abspath(__file__).split("MyQuantLib")[0]+"MyQuantLib"
-sys.path.append(root)
+
 import Tools.GetLocalDatabasePath as GetPath
-import numpy as np
+
 
 
 ########################################################################
-class CalcPortRets(object):
+class CalculatePortfolioReturn(object):
     """"""
 
     #----------------------------------------------------------------------
-    def __init__(self,mktDataDbAddr,conn=None):
+    def __init__(self,mktDataDbAddr,conn=None,logger=None):
         """Constructor"""
+        if logger == None:
+            self.logger = logging.Logger("")
+        else:
+            self.logger = logger
+            
         if conn!=None:
             self.conn = conn
         else:
             self.conn = lite.connect(":memory:")
             self.conn.text_factory = str
             cur = self.conn.cursor()
-            print "Load local database into in-memory database" 
+            self.logger.info("<{}>-Load local database into in-memory database".format(__name__.split('.')[-1])) 
             locDbPath = GetPath.GetLocalDatabasePath()
             _mktDataDbAddr = locDbPath["RawEquity"]+mktDataDbAddr
             cur.execute("ATTACH '{}' AS MktData".format(_mktDataDbAddr))
-            cur.execute("CREATE TABLE MktData AS SELECT StkCode,Date,LC,TC FROM MktData.A_Share_Data")
-            print "Finished"
-            cur.execute("CREATE INDEX mId ON MktData (Date,StkCode)")
-            print "Finished"    
+            cur.execute("CREATE TABLE MktData AS SELECT StkCode,Date,LC,TC FROM MktData.AStockData")
+            cur.execute("CREATE INDEX mId ON MktData (Date,StkCode)".format(__name__.split('.')[-1]))
+            self.logger.info("<{}>-Done")
+            
             
     #----------------------------------------------------------------------
     def Calc(self,date,stkList):
@@ -56,7 +61,7 @@ class CalcPortRets(object):
                 cur.execute(sql.format(stk,date))
                 content = cur.fetchone()
                 if content!=None and content[0]!=None and content[1]!=None:
-                    ret.append(np.log(content[1])-np.log(content[0]))
+                    ret.append((content[1]-content[0])/content[0])
                 #print stk,date,np.log(content[1])-np.log(content[0])
             return np.mean(ret)
             
