@@ -11,6 +11,7 @@ import sqlite3 as lite
 from datetime import datetime,timedelta
 from ConfigParser import ConfigParser
 
+root = os.path.abspath("D:\\MyQuantLib\\")
 import Tools.GetLocalDatabasePath as GetPath
 import Tools.GetTradeDays as GetTrdDay
 import FactorModel.ComputeFundamentalFactors._CalculateFactorValues as CalcFactorVals
@@ -78,7 +79,7 @@ class ComputeFactorValuesAndZScores(object):
         self.factorNames = []
         self.factorAlgos = []
         for style in factorStyle:
-            path = root + "\\FactorModel\\ComputeFundamentalFactors\\FactorAlgos\\"+style
+            path = root+"\\FactorModel\\ComputeFundamentalFactors\\FactorAlgos\\"+style
             algoFiles = os.listdir(path)
             for algoFile in algoFiles: 
                 algoName = algoFile.split('.')
@@ -116,6 +117,7 @@ class ComputeFactorValuesAndZScores(object):
         
         insertSql = "?,?,?,?,?,?,?,?"+len(self.factorAlgos)*",?"
         for dt in self.reCalcDate:
+            self.logger.info("<{}>-Compute factor at {}".format(__name__.split('.')[-1],dt))
             stkUniver = self.objConstituentStocks.GetConstituentStocksAtGivenDate(dt,self.stkUniver)
             if self.stkUniver=="000300":
                 hs300 = self.objConstituentStocks.GetConstituentStocksAtGivenDate(dt,"000300")

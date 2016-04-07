@@ -89,7 +89,7 @@ class CalculateFactorValues(object):
         begDate = date[0] 
         endDate = date[1]    
         #tm1 = time.time()
-        self.logger.info("<{}>-Calculating factor value of stock {} at {}".format(__name__.split('.')[-1],stkCode,factorValDate))
+        #self.logger.info("<{}>-Calculating factor value of stock {} at {}".format(__name__.split('.')[-1],stkCode,factorValDate))
         #tm1 = time.time()
         sql = """
               SELECT TC
@@ -132,7 +132,7 @@ class CalculateFactorValues(object):
         acctPeriods = content[0]
         rptType = content[1]
         #tm4 = time.time()
-        self.logger.info("<{}>-Basic info [Price:{},Capital:{},FinacialYear:{},ReportType:{}]".format(__name__.split('.')[-1],p,s,acctPeriods,rptType))    
+        #self.logger.info("<{}>-Basic info [Price:{},Capital:{},FinacialYear:{},ReportType:{}]".format(__name__.split('.')[-1],p,s,acctPeriods,rptType))    
         #print tm3-tm2,tm3-tm2,tm2-tm1
         factorVals = []
         for algo in factorAlgos:
