@@ -20,7 +20,7 @@ import Tools.LogOutputHandler as LogHandler
 
 
 ########################################################################
-class ComputeFactorValuesAndZScores(object):
+class ComputeFactorValues(object):
     """
     计算给定投资空间中的所有股票
     基本面因子值并在横截面做标准化
@@ -43,7 +43,9 @@ class ComputeFactorValuesAndZScores(object):
 
     #----------------------------------------------------------------------
     def LoadSourceData(self,dbPathFdmtData,dbPathMktData,dbPathConstituentStocks):
-        """"""
+        """
+        读取本地数据库数据
+        """
         self.objConstituentStocks = GetIndexConstituentStocks.GetIndexConstituentStocks(dbPathConstituentStocks,self.logger) 
         self.objCalcFactorVals = CalcFactorVals.CalculateFactorValues(dbPathFdmtData,dbPathMktData,None,self.logger)
         
