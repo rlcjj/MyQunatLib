@@ -139,6 +139,6 @@ class ComputeICs(object):
         mat = pd.DataFrame([self.zscores[factorName].values,self.zscoresStockReturn]).transpose()
         #print mat
         corr = mat.corr().values
-        print factorName,corr[0,1]
+        return corr[0,1]
         
         
