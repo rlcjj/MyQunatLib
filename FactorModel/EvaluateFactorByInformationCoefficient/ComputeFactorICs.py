@@ -61,7 +61,8 @@ class ComputeICs(object):
         cur.execute("SELECT DISTINCT Date FROM FactorValues ORDER BY Date ASC")
         rows = cur.fetchall()
         for row in rows:
-            self.revalueDays.append(row[0])
+            if row[0]<=endDate and row[0]>=begDate:
+                self.revalueDays.append(row[0])
         for d in self._trdDays:
             if d>=self.revalueDays[0] and d<=endDate and d>=begDate:
                 self.trdDays.append(d)     
@@ -106,7 +107,7 @@ class ComputeICs(object):
         _zscores = np.array(zscores,dtype=np.float)
         self.zscores = pd.DataFrame(_zscores,index=stockCode,columns=self.factorNames)
         self.zscoresDay = date
-        self.zscores.to_csv('zscores.csv')
+        #self.zscores.to_csv('zscores.csv')
         
         
     #----------------------------------------------------------------------
@@ -125,7 +126,10 @@ class ComputeICs(object):
         for stkCode in self.zscores.index:
             cur.execute(sql.format(stkCode,dateBeg,dateEnd))
             rows = cur.fetchall()
-            _ret = np.log(rows[1][0])-np.log(rows[0][0])
+            if len(rows)<2:
+                _ret = np.nan
+            else:
+                _ret = np.log(rows[1][0])-np.log(rows[0][0])
             zscoresStockReturn.append(_ret)
             #f.write(stkCode+','+repr(rows[1][0])+','+repr(rows[0][0])+'\n')
         self.zscoresStockReturn = np.array(zscoresStockReturn)
@@ -140,5 +144,58 @@ class ComputeICs(object):
         #print mat
         corr = mat.corr().values
         return corr[0,1]
+    
+    
+    #----------------------------------------------------------------------
+    def ComputeICsAndSave(self,tbNameZScores,universeIndex,excludeIndus,*returnHorizon):
+        """
+        计算所有因子的IC并存入数据库
+        """
+        tbNameICs = "FactorICs_{}".format(universeIndex)
+        print tbNameICs
+        cur = self.connDbFV.cursor()
+        cur.execute("DROP TABLE IF EXISTS {}".format(tbNameICs))
+        sqlStr = "Date TEXT,days1 INT,days2 INT"
+        for fn in self.factorNames:
+            sqlStr += (','+fn+" FLOAT")
+        cur.execute("CREATE TABLE {}({})".format(tbNameICs,sqlStr))
+        insertSql = "?,?,?"+",?"*len(self.factorNames)
+        if universeIndex=="HS300":
+            inHS300 = '1'
+        else:
+            inHS300 = '0'
+        for date in self.revalueDays:
+            print date
+            self.GetZScores(tbNameZScores,inHS300,date,excludeIndus)
+            for returnDays in returnHorizon:
+                days1 = returnDays[0]
+                days2 = returnDays[1]
+                self.GetStockReturn(days1,days2)
+                _insertRow = [date,days1,days2]
+                for fn in self.factorNames:
+                    ic = self.ComputeIC(fn)
+                    _insertRow.append(ic)
+                insertRow = tuple(_insertRow)
+                cur.execute("INSERT INTO {} VALUES ({})".format(tbNameICs,insertSql),insertRow)
+            self.connDbFV.commit()
+            
+            
+    #----------------------------------------------------------------------
+    def ExploreICDecay(self,tbNameICs,begDate,endDate,returnHorizonList):
+        """"""
+        cur = self.connDbFV.cursor()
+        res = pd.DataFrame()
+        for days in returnHorizonList:
+            sql = "SELECT {} FROM {} WHERE DATE>='{}' AND DATE<='{}' AND Days2={}"
+            cur.execute(sql.format(self.factorStr,tbNameICs,begDate,endDate,days))
+            rows = cur.fetchall()
+            df = pd.DataFrame(rows,columns=self.factorNames)
+            m = df.mean(axis=0)
+            dfm = m.to_frame(days)
+            res = pd.concat([res,dfm],axis=1)
+        res.to_csv("IC_Decay.csv")
         
+            
+            
+                
         

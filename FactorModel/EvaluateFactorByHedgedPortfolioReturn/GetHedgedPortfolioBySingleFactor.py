@@ -14,7 +14,7 @@ from datetime import datetime,timedelta
 import Tools.GetLocalDatabasePath as GetPath
 import Tools.GetTradeDays as GetTrdDay
 import Tools.Draw as Draw
-import FactorModel.GetHedgedPortfolioAndCalculateReturn._CalculatePortfolioReturn as CalcPortRet
+import FactorModel.EvaluateFactorByHedgedPortfolioReturn._CalculatePortfolioReturn as CalcPortRet
 
 
 ########################################################################
@@ -116,16 +116,21 @@ class GetHedgedPortfolioBySingleFactor(object):
         benchMarkPort = []
         for dt in self.trdDays:
             if dt in self.revalueDays:
+                tm1 = time.time()
                 stks = self.SortStocksByFactorValue(dt,InHS300,factorName,tableName,order,excludeIndus)
+                tm2 = time.time()
                 numStk = int(len(stks[0])*percentile)
                 #print dt,len(stks[0]),len(stks[1])
                 if len(stks[1])>=0.4*len(stks[0]):
                     longPort = stks[1][0:numStk]
                     shortPort = stks[1][-numStk:]
                 benchMarkPort = stks[0]
+            tm3 = time.time()
             longRet = self.objCalcPortReturn.Calc(dt,longPort)
             shortRet = self.objCalcPortReturn.Calc(dt,shortPort)
             benchmarkRet = self.objCalcPortReturn.Calc(dt,benchMarkPort)
+            tm4 = time.time()
+            #print tm2-tm1,tm4-tm3
             ret = longRet-shortRet
             date.append(dt)
             hedgedPortReturn.append(ret)
@@ -140,7 +145,7 @@ class GetHedgedPortfolioBySingleFactor(object):
             
         if plot == 1:
             Draw.DrawCumulativeReturnCurve(date,hedgedPortReturn,factorName+'_'+univer,plotPath+"\\"+factorName+"FactorPortReturn.jpeg",benchmarkReturn)
-            
+            self.logger.info("<{}>-Plot hedged return of factor {}".format(__name__.split('.')[-1],factorName)) 
                 
         
 if __name__ == "__main__":

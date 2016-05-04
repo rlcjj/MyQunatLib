@@ -8,16 +8,15 @@
 
 import os,sys
 import sqlite3 as lite
-root = os.path.abspath(__file__).split("PyQuantStrategy")[0]+"PyQuantStrategy"
-sys.path.append(root)
+import Configs.RootPath as Root
 import Tools.GetLocalDatabasePath as GetPath
-
+RootPath=Root.RootPath
 
 #----------------------------------------------------------------------
 def GetTradeDays(dbName="MktGenInfo\\TradeDate_Wind_CICC.db"):
     """"""
     locDbPath = GetPath.GetLocalDatabasePath()
-    trdDateDbAddr = locDbPath["RawEquity"]+dbName
+    trdDateDbAddr = locDbPath["EquityDataRaw"]+dbName
     conn = lite.connect(trdDateDbAddr)
     conn.text_factory = str
     cur = conn.cursor()

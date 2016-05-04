@@ -55,10 +55,10 @@ class CalculatePortfolioReturn(object):
                 sql = """
                       SELECT LC,TC
                       FROM MktData
-                      WHERE StkCode='{}'
-                      AND Date='{}'
+                      WHERE Date='{}'
+                      AND StkCode='{}'
                       """
-                cur.execute(sql.format(stk,date))
+                cur.execute(sql.format(date,stk))
                 content = cur.fetchone()
                 if content!=None and content[0]!=None and content[1]!=None:
                     ret.append((content[1]-content[0])/content[0])

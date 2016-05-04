@@ -6,17 +6,17 @@
   Created: 2015/12/15
 """
 
-import os,sys,logging 
+import Configs.RootPath as Root
 from ConfigParser import ConfigParser
-root = os.path.abspath(__file__).split("MyQuantLib")[0]+"MyQuantLib"
-sys.path.append(root)
+
+RootPath = Root.RootPath
 
 #----------------------------------------------------------------------
 def GetLocalDatabasePath():
     """"""
-    configPath = "\\Configs\\DatabaseConfigs\\DbInfo.cfg"
+    configPath = "\\Configs\\DatabaseInfo.cfg"
     dbCfg = ConfigParser()
     dbCfg.optionxform = str 
-    dbCfg.read(root + configPath)    
-    return {"RawEquity":dbCfg.get("Local", "RawEquityData"),
-            "ProcEquity":dbCfg.get("Local", "ProcessedEquityData")}
+    dbCfg.read(RootPath + configPath)    
+    return {"EquityDataRaw":dbCfg.get("Local", "EquityDataRaw"),
+            "EquityDataRefined":dbCfg.get("Local", "EquityDataRefined")}

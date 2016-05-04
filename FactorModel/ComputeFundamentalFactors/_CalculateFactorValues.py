@@ -42,8 +42,8 @@ class CalculateFactorValues(object):
             
             self.logger.info("<{}>-Load local database into in-memory database...".format(__name__.split('.')[-1]))        
             locDbPath = GetPath.GetLocalDatabasePath()
-            _dbPathPITFundamentalData = locDbPath["ProcEquity"]+dbPathPITFundamentalData
-            _dbPathMarketData = locDbPath["RawEquity"]+dbPathMarketData
+            _dbPathPITFundamentalData = locDbPath["EquityDataRefined"]+dbPathPITFundamentalData
+            _dbPathMarketData = locDbPath["EquityDataRaw"]+dbPathMarketData
             cur.execute("ATTACH '{}' AS FdmtData".format(_dbPathPITFundamentalData))
             cur.execute("ATTACH '{}' AS MktData".format(_dbPathMarketData))
             

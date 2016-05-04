@@ -33,7 +33,7 @@ class GetIndexConstituentStocks(object):
         self.conn = lite.connect(":memory:")
         cur = self.conn.cursor()
         self.conn.text_factory = str
-        cur.execute("ATTACH '{}' AS _IndexComp".format(locDbPath["RawEquity"]+dbAddress))
+        cur.execute("ATTACH '{}' AS _IndexComp".format(locDbPath["EquityDataRaw"]+dbAddress))
         self.logger.info("<{}>-Load table IndexConstituent".format(__name__.split('.')[-1]))
         cur.execute("CREATE TABLE IndexComp AS SELECT * FROM _IndexComp.IndexComp")
         self.logger.info("<{}>-Load table sywg industry classification".format(__name__.split('.')[-1]))
@@ -142,8 +142,8 @@ class GetIndexConstituentStocks(object):
             return date
         else:
             return None
-        
-        
+    
+    
     #----------------------------------------------------------------------
     def GetStockNameAndIndustry(self,stkCode,date):
         """

@@ -36,7 +36,7 @@ class ComputeFactorValues(object):
         else:    
             self.logger = logger
             
-        dbPathProcessedData = GetPath.GetLocalDatabasePath()["ProcEquity"]
+        dbPathProcessedData = GetPath.GetLocalDatabasePath()["EquityDataRefined"]
         self.dbPathProcessedData = dbPathProcessedData
         self.totalTradeDay = GetTrdDay.GetTradeDays()   
         
@@ -146,7 +146,7 @@ class ComputeFactorValues(object):
         
         
     #----------------------------------------------------------------------
-    def ComputeAndSaveZScores(self,stockUniverse,configPath,classification):
+    def ComputeAndSaveZScores(self,configPath,classification):
         """
         因子值标准化
         """
@@ -154,7 +154,7 @@ class ComputeFactorValues(object):
         conf.read(configPath)
         self.logger.info("<{}>-Load industry configs".format(__name__.split('.')[-1]))
         indusList = conf.items(classification)
-        conn = lite.connect(self.dbPathProcessedData+self.fctDbName+".db")
+        conn = lite.connect(self.dbPathProcessedData+self.factorDatabaseName+".db")
         conn.text_factory = str
         cur = conn.cursor()
         

@@ -53,7 +53,7 @@ class ConnRmtDb(object):
             try:
                 conn = pyodbc.connect("""
                                       DRIVER={SQL SERVER};
-                                      SERVER=%s;DATABASE=Pgenius;
+                                      SERVER=%s;DATABASE=suntime;
                                       UID=%s;PWD=%s;"""
                                       %(self.server,self.usr,self.pwd))
             except Exception,e:
