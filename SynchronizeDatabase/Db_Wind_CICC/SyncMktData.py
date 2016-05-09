@@ -8,8 +8,8 @@
 
 import os,sys,logging,time
 from ConfigParser import ConfigParser
-root = os.path.abspath(__file__).split("PyQuantStrategy")[0]+"PyQuantStrategy"
-sys.path.append(root)
+import Configs.RootPath as Root
+RootPath = Root.RootPath
 import SynchronizeDatabase.SyncDb as Sync
 
 ########################################################################
@@ -19,7 +19,7 @@ class SyncData(Sync.SyncDb):
     #----------------------------------------------------------------------
     def __init__(self,logOutputHandler):
         """Constructor"""
-        super(self.__class__,self).__init__("DbInfo.cfg",__name__,logOutputHandler)
+        super(self.__class__,self).__init__("DatabaseInfo.cfg",__name__,logOutputHandler)
 
 
     #----------------------------------------------------------------------

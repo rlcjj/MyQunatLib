@@ -10,8 +10,8 @@ import os,sys
 import pyodbc,cx_Oracle
 from ConfigParser import ConfigParser
 os.environ['NLS_LANG'] = 'SIMPLIFIED CHINESE_CHINA.UTF8'
-root = os.path.abspath(__file__).split("MyQuantLib")[0]+"\\MyQuantLib"
-sys.path.append(root)
+import Configs.RootPath as Root
+RootPath = Root.RootPath
 
 ########################################################################
 class ConnRmtDb(object):
@@ -25,9 +25,9 @@ class ConnRmtDb(object):
         
         self.logger = logger
         self.logger.info("%s load config file: '%s'"%(__name__,dbCfgFile))
-        configPath = "\\Configs\\DatabaseConfigs\\"
+        configPath = "\\Configs\\"
         self.cfg = ConfigParser()
-        self.cfg.read(root + configPath + dbCfgFile)
+        self.cfg.read(RootPath + configPath + dbCfgFile)
         #print self.cfg.sections()
         
     #----------------------------------------------------------------------

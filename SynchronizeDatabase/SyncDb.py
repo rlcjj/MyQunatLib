@@ -8,8 +8,8 @@
 
 import os,sys,logging ,time,decimal,codecs
 from ConfigParser import ConfigParser
-root = os.path.abspath(__file__).split("MyQuantLib")[0]+"MyQuantLib"
-sys.path.append(root)
+import Configs.RootPath as Root
+RootPath = Root.RootPath
 
 import ConnDb as Conn
 import sqlite3 as lite
@@ -63,10 +63,11 @@ class SyncDb(object):
             
         self.dbCfgFile = dbCfgFile
         self.logger.info("%s load config file: '%s'"%(__name__,self.dbCfgFile))
-        configPath = "\\Configs\\DatabaseConfigs\\"
+        configPath = "\\Configs\\"
         self.dbCfg = ConfigParser()
         self.dbCfg.optionxform = str 
-        self.dbCfg.read(root + configPath + dbCfgFile)
+        self.dbCfg.read(RootPath + configPath + dbCfgFile)
+        print self.dbCfg.sections
         
         
         
@@ -218,7 +219,7 @@ class SyncDb(object):
         """
         self.logger.info("Connecting to local database '%s'"%dbName)
         lite.register_adapter(decimal.Decimal, lambda x:str(x))
-        locDbPath = self.dbCfg.get("Local", "RawEquityData")
+        locDbPath = self.dbCfg.get("Local", "EquityDataRaw")
         if not os.path.exists(locDbPath+dbName):
             self.logger.info("Database '%s' dose not exist, create one"%dbName)
         self.locConn = lite.connect(locDbPath+dbName)
