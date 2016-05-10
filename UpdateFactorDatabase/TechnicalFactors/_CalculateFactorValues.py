@@ -97,4 +97,9 @@ class CalculateFactorValues(object):
         df.to_csv("df.csv")
         print df
         
+
+        factorVal = algo.Calc(df)
+        print factorVal
+
+        
         
