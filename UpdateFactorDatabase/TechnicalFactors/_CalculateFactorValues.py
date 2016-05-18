@@ -22,12 +22,12 @@ class CalculateFactorValues(object):
     """"""
 
     #----------------------------------------------------------------------
-    def __init__(self,dbPathMarketData,conn=None,logger=None):
+    def __init__(self,dbPathMarketData,dbPathConstituentData,conn=None,logger=None):
         """Constructor"""
         
         #Create log file
         if logger == None:
-            self.logger = LogHandler.LogOutputHandler("CalculateFundamentalFactorValues.log")
+            self.logger = LogHandler.LogOutputHandler("CalculateTechnicalFactorValues.log")
         else:    
             self.logger = logger        
         
@@ -43,6 +43,9 @@ class CalculateFactorValues(object):
             locDbPath = GetPath.GetLocalDatabasePath()
             _dbPathMarketData = locDbPath["EquityDataRaw"]+dbPathMarketData
             cur.execute("ATTACH '{}' AS MktData".format(_dbPathMarketData))
+            _dbPathConstituentData = locDbPath["EquityDataRaw"]+dbPathConstituentData
+            cur.execute("ATTACH '{}' AS ConstituentData".format(_dbPathConstituentData))            
+            
             
             self.logger.info("<{}>-Load table MarketData".format(__name__.split('.')[-1]))
             cur.execute("CREATE TABLE MktData AS SELECT StkCode,Date,TC,LC,TC_Adj,Vol,Amt,Statu FROM MktData.AStockData WHERE Date>='20060101'")
@@ -50,13 +53,19 @@ class CalculateFactorValues(object):
             self.logger.info("<{}>-Load talbe MarketCap".format(__name__.split('.')[-1]))
             cur.execute("CREATE TABLE MktCap AS SELECT * FROM MktData.MarketCap")
             self.logger.info("<{}>-Done".format(__name__.split('.')[-1])) 
+            self.logger.info("<{}>-Load talbe ConstituentData".format(__name__.split('.')[-1]))
+            cur.execute("CREATE TABLE Constituent AS SELECT StkCode,StkName,IncDate,IndusCode,IndusName FROM ConstituentData.SWIndustry1st")
+            self.logger.info("<{}>-Done".format(__name__.split('.')[-1]))             
             
             self.logger.info("<{}>-Create index on table MarketData".format(__name__.split('.')[-1]))
             cur.execute("CREATE INDEX mId ON MktData (StkCode,Date)")
             self.logger.info("<{}>-Done".format(__name__.split('.')[-1]))
             self.logger.info("<{}>-Create index on table MarketCap".format(__name__.split('.')[-1]))
             cur.execute("CREATE INDEX cId ON MktCap (StkCode,Date)")
-            self.logger.info("<{}>-Done".format(__name__.split('.')[-1]))                    
+            self.logger.info("<{}>-Done".format(__name__.split('.')[-1]))       
+            self.logger.info("<{}>-Create index on table Constituent".format(__name__.split('.')[-1]))
+            cur.execute("CREATE INDEX csId ON Constituent (StkCode,IncDate)")
+            self.logger.info("<{}>-Done".format(__name__.split('.')[-1]))               
 
 
     #----------------------------------------------------------------------
@@ -82,24 +91,36 @@ class CalculateFactorValues(object):
         cur = self.conn.cursor() 
         
         sql = """
-              SELECT MktData.Date,TC,TC_Adj,Vol,Amt,Statu,FloatCap,TotCap 
-              FROM MktData 
-              LEFT JOIN MktCap
-              ON MktData.Date=MktCap.Date AND MktData.StkCode=MktCap.StkCode
-              WHERE MktData.StkCode='{}' AND MktData.Date>='{}'
-              ORDER BY MktData.Date ASC
+              SELECT T1.Date,TC,TC_Adj,Vol,Amt,Statu,FloatCap,TotCap,StkName,IncDate,IndusCode,IndusName
+              FROM 
+                  (SELECT MktData.*,MktCap.*
+                   FROM MktData 
+                   LEFT JOIN MktCap
+                   ON MktData.Date>=MktCap.Date AND MktData.StkCode=MktCap.StkCode
+                   WHERE MktData.StkCode='{}' AND MktData.Date>='{}'
+                   GROUP BY MktData.Date 
+                   ORDER BY MktData.Date ASC) T1
+              LEFT JOIN Constituent T2
+              ON T1.Date>=T2.IncDate AND T1.StkCode=T2.StkCode
+              GROUP BY T1.Date
               """
         cur.execute(sql.format(stkCode,begDate))
         rows = cur.fetchall()
+        if len(rows)==0:
+            return None
         mat = np.array(rows)
-        df = pd.DataFrame(mat[:,1:],index=mat[:,0],columns=["price","price_adj","vol","amt","statu","f_cap","t_cap"])
-        df = df.fillna(method='ffill')
-        df.to_csv("df.csv")
-        print df
-        
-
-        factorVal = algo.Calc(df)
-        print factorVal
+        mat1 = mat[:,0]
+        mat2 = mat[:,1:8].astype(float)
+        mat3 = mat[:,8:]
+        df = pd.DataFrame(mat2,index=mat1,columns=["price","price_adj","vol","amt","statu","f_cap","t_cap"])
+        info = pd.DataFrame(mat3,index=mat1,columns=["StkName","IncDate","IndusCode","IndusName"])
+        #df = df.fillna(method='ffill')
+        _results = []
+        for algo in factorAlgos:
+            factorVal = algo.Calc(df)
+            _results.append(factorVal)
+        results = pd.concat(_results,axis=1)
+        return results,info
 
         
         

@@ -3,7 +3,7 @@
 """
   Author:  Wusf --<wushifan221@gmail.com>
   Purpose: 
-  Created: 2016/5/10
+  Created: 2016/5/16
 """
 
 import numpy as np
@@ -13,9 +13,8 @@ import pandas as pd
 #----------------------------------------------------------------------
 def Calc(df):
     """
-    计算5日换手率
+    计算60日平均流动市值
     """
-    mv = pd.rolling_mean(df["vol"],5)
-    mc = pd.rolling_mean(df["f_cap"],5)
-    res = (mv/mc).to_frame("FTO5d")
+    mcap = df["price"]*df["f_cap"]
+    res = pd.rolling_mean(mcap,60).to_frame("fcap60")
     return res
