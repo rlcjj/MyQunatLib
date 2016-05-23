@@ -77,7 +77,7 @@ class ComputeFactorValues(object):
         self.conn.text_factory = str
         self.cur = self.conn.cursor()
         self.cur.execute("PRAGMA synchronous = OFF")
-        self.cur.execute("DROP TABLE IF EXISTS FundamentalFactors+")
+        self.cur.execute("DROP TABLE IF EXISTS FundamentalFactors")
         sqlStr = ""
         for item in self.factorNames:
             sqlStr+=','+item+" FLOAT"

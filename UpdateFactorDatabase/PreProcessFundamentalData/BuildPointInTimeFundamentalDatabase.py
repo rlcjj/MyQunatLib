@@ -8,12 +8,13 @@
 
 import os,sys,logging ,time,decimal,codecs
 import sqlite3 as lite
-root = os.path.abspath(__file__).split("MyQuantLib")[0]+"MyQuantLib"
-sys.path.append(root)
+
 import Tools.GetLocalDatabasePath as GetPath
 import InvestmentUniverse.GetIndexConstituentStocks as GetIndexConstituentStocks
-import FactorModel.PreProcessFundamentalData._GetPointInTimeData as GetPITData
+import UpdateFactorDatabase.PreProcessFundamentalData._GetPointInTimeData as GetPITData
 import Tools.LogOutputHandler as LogHandler
+import Configs.RootPath as Root
+RootPath = Root.RootPath 
 
 
 ########################################################################
@@ -49,7 +50,7 @@ class BuildPITFundamentalDatabase(object):
         加载需要预处理的财务报表和预测数据项目
         """
         
-        itemDirPath = root+"//FactorModel//PreProcessFundamentalData//DataItemToBeProcessed"
+        itemDirPath = RootPath+"//UpdateFactorDatabase//PreProcessFundamentalData//DataItemToBeProcessed"
         
         finItemFilePath = itemDirPath+"//FinancialReportData"
         self.finItems = []
@@ -75,7 +76,7 @@ class BuildPITFundamentalDatabase(object):
         """
         创立时点基本面数据数据库
         """
-        pttDbAddr = self.locDbPath["ProcEquity"]+pointInTimeDatabaseName
+        pttDbAddr = self.locDbPath["EquityDataRefined"]+pointInTimeDatabaseName
         self.pitConn = lite.connect(pttDbAddr)
         cur = self.pitConn.cursor()
         cur.execute("DROP TABLE IF EXISTS FinancialPointInTimeData")
@@ -114,8 +115,8 @@ class BuildPITFundamentalDatabase(object):
         计算并存储基本面时点数据
         """
         #原始财务报表和预测数据数据库地址
-        finRptDbPath = self.locDbPath["RawEquity"]+"FinRptData\\FinRptData_Wind_CICC.db"
-        mktDataDbPath = self.locDbPath["RawEquity"]+"MktData\\MktData_Wind_CICC.db"
+        finRptDbPath = self.locDbPath["EquityDataRaw"]+"FinRptData\\FinRptData_Wind_CICC.db"
+        mktDataDbPath = self.locDbPath["EquityDataRaw"]+"MktData\\MktData_Wind_CICC.db"
         
         #创建获取时点数据的类
         getPITDataCls = GetPITData.GetPointInTimeData(finRptDbPath,mktDataDbPath,self.logger)
@@ -127,9 +128,9 @@ class BuildPITFundamentalDatabase(object):
         insertSql = "?,?,?,?,?,?"+lenOfItems*",?"
         for stk in allStkCodes:
             self.logger.info("<{}>-Process financial report data - stock code {}".format(__name__.split('.')[-1],stk))
-            date = self.objConstituentStocks.GetStockIncludedAndExcludedDate(stk,self.constituentIndexCode)
-            begDate = date[0][0]
-            endDate = date[-1][1]
+            #date = self.objConstituentStocks.GetStockIncludedAndExcludedDate(stk,self.constituentIndexCode)
+            begDate = startDate
+            endDate = None
             rptDeclareDate = getPITDataCls.GetFinancialReportDeclareDate(stk,begDate,endDate)
             for dt in rptDeclareDate:
                 itemVals = getPITDataCls.ProcessFinancialData(dt,300,stk,self.finItems)
@@ -146,9 +147,9 @@ class BuildPITFundamentalDatabase(object):
         insertSql = "?,?,?"+lenOfItems*",?"
         for stk in allStkCodes:
             self.logger.info("<{}>-Process forecast report data - stock code {}".format(__name__.split('.')[-1],stk))
-            date = self.objConstituentStocks.GetStockIncludedAndExcludedDate(stk,self.constituentIndexCode)
-            begDate = date[0][0]
-            endDate = date[-1][1]
+            #date = self.objConstituentStocks.GetStockIncludedAndExcludedDate(stk,self.constituentIndexCode)
+            begDate = startDate
+            endDate = None
             rptDeclareDate = getPITDataCls.GetForecastReportDeclareDate(stk,begDate,endDate)
             for dt in rptDeclareDate:
                 itemVals = getPITDataCls.ProcessForecastData(dt,300,stk,self.fcstItems)

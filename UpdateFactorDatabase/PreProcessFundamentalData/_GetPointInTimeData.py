@@ -159,7 +159,7 @@ class GetPointInTimeData(object):
         rptInfo = content
         derivData = []
         for item in items:
-            exec("import FactorModel.PreProcessFundamentalData.DataItemToBeProcessed.FinancialReportData.{} as _item".format(item))
+            exec("import UpdateFactorDatabase.PreProcessFundamentalData.DataItemToBeProcessed.FinancialReportData.{} as _item".format(item))
             _derivData = _item.Calc(cur,lookupDate,rptInfo,stkCode)
             derivData.append(_derivData)
         return rptInfo[0],rptInfo[1],rptInfo[2],rptInfo[3],derivData
@@ -173,7 +173,7 @@ class GetPointInTimeData(object):
         cur = self.conn.cursor()
         derivData = []
         for item in items:
-            exec("import FactorModel.PreProcessFundamentalData.DataItemToBeProcessed.ForecastReportData.{} as _item".format(item))
+            exec("import UpdateFactorDatabase.PreProcessFundamentalData.DataItemToBeProcessed.ForecastReportData.{} as _item".format(item))
             _derivData = _item.Calc(cur,lookupDate,"",stkCode)
             derivData.append(_derivData)
         thisAcctYear = lookupDate[0:4]+"1231"
