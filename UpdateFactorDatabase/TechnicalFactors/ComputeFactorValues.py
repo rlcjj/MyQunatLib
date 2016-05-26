@@ -106,8 +106,8 @@ class ComputeFactorValues(object):
                     for v in values[d]:
                         row.append(v)
                     self.cur.execute("INSERT INTO TechnicalFactors VALUES ({})".format(insertSql),tuple(row))
-            self.conn.commit()
-        self.cur.execute("CREATE INDEX Id ON TechnicalFactors(Date,StkCode)")
+        self.conn.commit()
+        self.cur.execute("CREATE INDEX Idt ON TechnicalFactors(Date,StkCode)")
         self.conn.commit()
         
         

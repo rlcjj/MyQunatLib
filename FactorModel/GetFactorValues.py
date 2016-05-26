@@ -31,7 +31,7 @@ class GetFactorValues(object):
             
     
     #----------------------------------------------------------------------
-    def LoadFactorValueTablesIntoMemory(self,dbNameFactor,factorTypes):
+    def LoadFactorTablesIntoMemory(self,dbNameFactor,factorTypes):
         """"""
         dbPath = GetPath.GetLocalDatabasePath()["EquityDataRefined"]
         dbPath = dbPath + dbNameFactor
@@ -86,7 +86,7 @@ class GetFactorValues(object):
             sqlStr = ""
             for fct in self.fundamentalFactors:
                 sqlStr += ','+fct 
-            sql = """
+            sql1 = """
                   SELECT Date {}
                   FROM FundamentalFactors
                   WHERE StkCode='{}'
@@ -94,14 +94,39 @@ class GetFactorValues(object):
                         AND Date>='{}'
                   ORDER BY Date DESC LIMIT 1
                   """
-            curFdmt.execute(sql.format(sqlStr,stkCode,endDate,begDate))
+            curFdmt.execute(sql1.format(sqlStr,stkCode,endDate,begDate))
             content = curFdmt.fetchone()
             if content == None:
                 for i in xrange(len(self.fundamentalFactors)):
                     factorValues[self.fundamentalFactors[i]]=numpy.nan
             else:
                 for i in xrange(len(self.fundamentalFactors)):
-                    factorValues[self.fundamentalFactors[i]]=content[i+1] 
+                    if content[i+1]==None:
+                        factorValues[self.fundamentalFactors[i]] = numpy.nan
+                    else:
+                        factorValues[self.fundamentalFactors[i]]=content[i+1]
+                    
+        if len(self.technicalFactors)>0:
+            sqlStr = ""
+            for fct in self.technicalFactors:
+                sqlStr += ','+fct 
+            sql2 = """
+                  SELECT Date {}
+                  FROM TechnicalFactors
+                  WHERE StkCode='{}'
+                        AND Date='{}' 
+                  """   
+            curTech.execute(sql2.format(sqlStr,stkCode,date[1]))
+            content = curTech.fetchone()
+            if content == None:
+                for i in xrange(len(self.technicalFactors)):
+                    factorValues[self.technicalFactors[i]]=numpy.nan
+            else:
+                for i in xrange(len(self.technicalFactors)):
+                    if content[i+1] == None:
+                        factorValues[self.technicalFactors[i]]=numpy.nan
+                    else:
+                        factorValues[self.technicalFactors[i]]=content[i+1]                    
                     
         return factorValues
             

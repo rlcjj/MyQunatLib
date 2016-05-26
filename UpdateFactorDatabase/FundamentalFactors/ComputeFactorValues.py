@@ -112,7 +112,7 @@ class ComputeFactorValues(object):
                         row.append(val)
                     self.cur.execute("INSERT INTO FundamentalFactors VALUES ({})".format(insertSql),tuple(row))
         self.conn.commit()
-        self.cur.execute("CREATE INDEX Id ON FundamentalFactors(Date,StkCode)")
+        self.cur.execute("CREATE INDEX Idf ON FundamentalFactors(Date,StkCode)")
         self.conn.commit()
         
         
