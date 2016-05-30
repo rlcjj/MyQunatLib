@@ -87,24 +87,34 @@ class GetFactorValues(object):
             for fct in self.fundamentalFactors:
                 sqlStr += ','+fct 
             sql1 = """
-                  SELECT Date {}
-                  FROM FundamentalFactors
+                  SELECT AcctPeriod,DeclareDate,DeReportType
+                  FROM FinancialPITData
                   WHERE StkCode='{}'
-                        AND Date<='{}' 
-                        AND Date>='{}'
-                  ORDER BY Date DESC LIMIT 1
+                      AND DeclareDate>='{}'
+                      AND DeclareDate<='{}'
+                  ORDER BY AcctPeriod DESC LIMIT 1
                   """
-            curFdmt.execute(sql1.format(sqlStr,stkCode,endDate,begDate))
+            curFdmt.execute(sql.format(stkCode,begDate,endDate))
             content = curFdmt.fetchone()
-            if content == None:
+            rptInfo = content
+            acctPeriods = rptInfo
+            factorValues["Date"]=date
+            if rptInfo == None:
                 for i in xrange(len(self.fundamentalFactors)):
                     factorValues[self.fundamentalFactors[i]]=numpy.nan
+                    factorValues["FinYear"] = numpy.nan
+                    factorValues["AnnouceDate"] = ''
+                    factorValues["RptType"] = ''
             else:
                 for i in xrange(len(self.fundamentalFactors)):
-                    if content[i+1]==None:
+                    factorValues["FinYear"] = rptInfo[0]
+                    factorValues["AnnouceDate"] = rptInfo[1]
+                    factorValues["RptType"] = rptInfo[2]                   
+                    factorVal = algo.Calc(cur,rptInfo,p,s,date,stkCode)
+                    if factorVal==None:
                         factorValues[self.fundamentalFactors[i]] = numpy.nan
                     else:
-                        factorValues[self.fundamentalFactors[i]]=content[i+1]
+                        factorValues[self.fundamentalFactors[i]]=factorVal
                     
         if len(self.technicalFactors)>0:
             sqlStr = ""

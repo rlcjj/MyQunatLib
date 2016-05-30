@@ -20,7 +20,7 @@ RootPath = Root.RootPath
 
 
 ########################################################################
-class MagicFormula(object):
+class EvaluateFactorByScatterPlot(object):
     """"""
 
     #----------------------------------------------------------------------
@@ -71,7 +71,7 @@ class MagicFormula(object):
     
     
     #----------------------------------------------------------------------
-    def _ExcludeStocksOfGivenInsusty(self,stocks,stockFactorValues,rptType):
+    def _ExcludeStocksOfGivenIndustry(self,stocks,stockFactorValues,rptType):
         """"""
         refinedStocks = []
         for stk in stocks:
