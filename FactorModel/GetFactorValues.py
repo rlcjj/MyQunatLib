@@ -47,8 +47,8 @@ class GetFactorValues(object):
         self.analystConn = self.conn1
         
         if "Fundamental" in factorTypes:
-            cur.execute("CREATE TABLE FundamentalFactors AS SELECT * FROM FVData.FundamentalFactors")
-            cur.execute("CREATE INDEX idF ON FundamentalFactors(StkCode,Date)")
+            cur.execute("CREATE TABLE FinancialPITData AS SELECT * FROM FVData.FinancialPointInTimeData")
+            cur.execute("CREATE INDEX idF ON FinancialPITData(StkCode,DeclareDate)")
             self.fundamentalConn = self.conn2            
         if "Technical" in factorTypes:
             cur.execute("CREATE TABLE TechnicalFactors AS SELECT * FROM FVData.TechnicalFactors")
@@ -75,6 +75,11 @@ class GetFactorValues(object):
         curAnal = self.analystConn.cursor()
 
         factorValues = {}
+        factorDefs = {}
+        for i in xrange(len(self.fundamentalFactors)):
+            #import FactorModel.FactorDef.S2P_TTM as algo
+            exec("import FactorModel.FactorDef.{} as algo".format(self.fundamentalFactors[i]))
+            factorDefs[self.fundamentalFactors[i]] = algo
         
         if len(self.fundamentalFactors)>0:
             _lookupDate = datetime.strptime(date,"%Y%m%d")
@@ -83,34 +88,50 @@ class GetFactorValues(object):
             date = (lookupLimit,date)        
             begDate = date[0] 
             endDate = date[1]  
-            sqlStr = ""
-            for fct in self.fundamentalFactors:
-                sqlStr += ','+fct 
+            
+            sql0 = """
+                          SELECT ClosePrice,TotalCapital
+                          FROM TechnicalFactors
+                          WHERE StkCode='{}'
+                                AND Date='{}' 
+                          """   
+            curTech.execute(sql0.format(stkCode,endDate))
+            content = curTech.fetchone() 
+            stkInfo = content
+            if stkInfo == None:
+                p = numpy.nan
+                s = numpy.nan
+            else:
+                p = stkInfo[0]
+                s = stkInfo[1]
+            factorValues["ClosePrice"] = p
+            factorValues["TotalCapital"] = s
+                
+            
             sql1 = """
-                  SELECT AcctPeriod,DeclareDate,DeReportType
+                  SELECT AcctPeriod,DeclareDate,ReportType
                   FROM FinancialPITData
                   WHERE StkCode='{}'
                       AND DeclareDate>='{}'
                       AND DeclareDate<='{}'
                   ORDER BY AcctPeriod DESC LIMIT 1
                   """
-            curFdmt.execute(sql.format(stkCode,begDate,endDate))
+            curFdmt.execute(sql1.format(stkCode,begDate,endDate))
             content = curFdmt.fetchone()
             rptInfo = content
-            acctPeriods = rptInfo
-            factorValues["Date"]=date
+            factorValues["Date"]=endDate
             if rptInfo == None:
                 for i in xrange(len(self.fundamentalFactors)):
                     factorValues[self.fundamentalFactors[i]]=numpy.nan
-                    factorValues["FinYear"] = numpy.nan
+                    factorValues["FinYear"] = ''
                     factorValues["AnnouceDate"] = ''
-                    factorValues["RptType"] = ''
+                    factorValues["RptType"] = None
             else:
                 for i in xrange(len(self.fundamentalFactors)):
                     factorValues["FinYear"] = rptInfo[0]
                     factorValues["AnnouceDate"] = rptInfo[1]
-                    factorValues["RptType"] = rptInfo[2]                   
-                    factorVal = algo.Calc(cur,rptInfo,p,s,date,stkCode)
+                    factorValues["RptType"] = rptInfo[2]     
+                    factorVal = factorDefs[self.fundamentalFactors[i]].Calc(curFdmt,rptInfo,p,s,date,stkCode)
                     if factorVal==None:
                         factorValues[self.fundamentalFactors[i]] = numpy.nan
                     else:

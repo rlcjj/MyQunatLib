@@ -18,18 +18,14 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
 
     rptDate = str(int(rptInfo[0][0:4])-1)+rptInfo[0][4:]
     sql1 = """
-           SELECT TotLiab
-                  -ifnull(AcctPayab,0)
-                  -ifnull(AdvanceFromCustomers,0) 
-                  -ifnull(PayrollPayab,0) 
-                  -ifnull(OtherPayab,0)
-                  -ifnull(AccruedExpns,0)
-                  -ifnull(DeferredRevenue,0)
-                  -ifnull(OtherCurLiab,0)
-                  -TotNonCurLiab
+          SELECT ifnull(ShtTmBorrow,0)
+                  +ifnull(NotesPayab,0)
+                  +ifnull(NonCurLiabWithin1Year,0)
+                  +ifnull(ShtTmDebenturePayab,0)
                   +ifnull(LngTmBorrow,0)
                   +ifnull(BondPayab,0)
-                  +TotShrHldEqtyExcludeMinor
+                  +ifnull(DeferTaxLiab,0),
+                  TotShrHldEqtyIncludeMinor
            FROM BalanceSheet
            WHERE StkCode='{}'
            AND RPT_DATE='{}'
@@ -43,7 +39,8 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
                   +ifnull(FinAssetSoldForRepurchase,0)
                   +ifnull(TransacFinDebt,0)
                   +ifnull(BondPayab,0)
-                  +TotShrHldEqtyExcludeMinor
+                  +ifnull(DeferTaxLiab,0),
+                  TotShrHldEqtyIncludeMinor
            FROM BalanceSheet
            WHERE StkCode='{}'
            AND RPT_DATE='{}'
@@ -54,7 +51,8 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
            SELECT ifnull(FinAssetSoldForRepurchase,0)
                   +ifnull(PolicyHolderDeposit,0)
                   +ifnull(LngTmBorrow,0)
-                  +TotShrHldEqtyExcludeMinor
+                  +ifnull(DeferTaxLiab,0),
+                  TotShrHldEqtyIncludeMinor
            FROM BalanceSheet
            WHERE StkCode='{}'
            AND RPT_DATE='{}'
@@ -68,7 +66,8 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
                   +ifnull(FinAssetSoldForRepurchase,0) 
                   +ifnull(LngTmBorrow,0) 
                   +ifnull(BondPayab,0)
-                  +TotShrHldEqtyExcludeMinor
+                  +ifnull(DeferTaxLiab,0),
+                  TotShrHldEqtyIncludeMinor
            FROM BalanceSheet
            WHERE StkCode='{}'
            AND RPT_DATE='{}'
@@ -91,6 +90,8 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     content = cur.fetchone()  
     if content==None:
         return None       
-    if content==None or content[0]==None or content[0]==0:
+    if content==None or content[0]==None or content[1]==0:
         return None
-    return content[0]
+    if content[1]<=0:
+        return None
+    return content[0]+content[1]

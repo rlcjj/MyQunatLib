@@ -25,13 +25,13 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     
     sql1 = """
            SELECT OpRevenue
-                  -TaxAndSurcharge
-                  -OpCost
-                  -SellExpns
-                  -AdminExpns
+                  -ifnull(TaxAndSurcharge,0)
+                  -ifnull(OpCost,0)
+                  -ifnull(SellExpns,0)
+                  -ifnull(AdminExpns,0)
                   -ifnull(AssetsDeval,0),
                   TotalProfits,
-                  IncomeTax
+                  ifnull(IncomeTax,0)
            FROM IncomeStatement 
            WHERE StkCode='{}'
            AND RPT_DATE='{}'
@@ -42,7 +42,7 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     sql2 = """
            SELECT OpProfits,
                   TotalProfits,
-                  IncomeTax
+                  ifnull(IncomeTax,0)
            FROM IncomeStatement 
            WHERE StkCode='{}'
            AND RPT_DATE='{}'
@@ -65,8 +65,11 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     v11 = content[0]
     v12 = content[1]
     v13 = content[2]
-        
-    t = v13/v12
+    
+    if v12<=0:
+        t = 0
+    else:
+        t = v13/v12
           
     return v11*(1-t)
 

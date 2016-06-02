@@ -75,8 +75,8 @@ class EvaluateFactorByScatterPlot(object):
         """"""
         refinedStocks = []
         for stk in stocks:
-            if type(stockFactorValues[stk]["ReportType"])==str:
-                if int(stockFactorValues[stk]["ReportType"])==rptType:
+            if stockFactorValues[stk]["RptType"]!=None:
+                if stockFactorValues[stk]["RptType"]==1:
                     refinedStocks.append(stk)
         return refinedStocks
     

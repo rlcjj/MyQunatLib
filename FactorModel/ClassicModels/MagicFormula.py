@@ -75,21 +75,43 @@ class MagicFormula(object):
         """"""
         refinedStocks = []
         for stk in stocks:
-            if type(stockFactorValues[stk]["ReportType"])==str:
-                if int(stockFactorValues[stk]["ReportType"])==rptType:
+            if stockFactorValues[stk]["RptType"]!=None:
+                if stockFactorValues[stk]["RptType"]==1:
                     refinedStocks.append(stk)
         return refinedStocks
     
+
+    #----------------------------------------------------------------------
+    def _Winsorzie(self,lst,percentile):
+        """"""
+        _lst = []
+        p1 = numpy.nanpercentile(lst,percentile,interpolation='lower')
+        p2 = numpy.nanpercentile(lst,100-percentile,interpolation='higher')
+        for item in lst:
+            if item>p1:
+                _lst.append(p1)
+            elif item<=p1 and item>p2:
+                _lst.append(item)
+            elif item<=p2:
+                _lst.append(p2)
+            else:
+                _lst.append(item)
+        return _lst
+                    
+        
     
     #----------------------------------------------------------------------
     def GenerateTradeList(self,cutOffPoint):
         """"""
         re = open("results.csv",'w')
-        self.objGetFactorValues.ChooseFactors(["ReportType","EBIT2EV_TTM","ROIC_TTM"],["FloatCap1d","FRet120d"],[])
+        self.objGetFactorValues.ChooseFactors(["EBIT2EV_TTM","ROIC_TTM","ChangeInGrossMargin_TTM"],["logsize","FRet20d"],[])
+        fdmtFactor1 = "EBIT2EV_TTM"
+        fdmtFactor2 = "FRet20d"  
+        predictRet = "FRet20d"
         for day in self.rebalaceDays:
             stks = self.objConstituentStocks.GetAllStocksExcludedAfterGivenDate(day,self.constituentIndexCode)
             stkFctVals = self._FetchStockFactorValues(day,stks,180)
-            stks = self._ExcludeStocksOfSmallCap(stks,stkFctVals,cutOffPoint)
+            #stks = self._ExcludeStocksOfSmallCap(stks,stkFctVals,cutOffPoint)
             stks = self._ExcludeStocksOfGivenInsusty(stks,stkFctVals,1)
             re.write(day+',')
             re.write("StockCode")
@@ -97,34 +119,44 @@ class MagicFormula(object):
             roic=[]
             ret=[]
             for s in stks:
-                ebit2ev.append(stkFctVals[s]["EBIT2EV_TTM"])
-                roic.append(stkFctVals[s]["ROIC_TTM"])
-                ret.append(stkFctVals[s]["FRet120d"])
-            xlabel = "ebit2ev"
-            ylabel = "roic"
-            title = day+"_future_return_120d"
-            path = day+"_future_return_120d.jpeg"
-            ScatterPlot.ScatterPlot(ebit2ev,roic,ret,xlabel,ylabel,title,path)
+                ebit2ev.append(stkFctVals[s][fdmtFactor1])
+                roic.append(stkFctVals[s][fdmtFactor2])
+                ret.append(stkFctVals[s][predictRet])
+            ebit2ev = self._Winsorzie(ebit2ev,99.5)
+            roic = self._Winsorzie(roic,99.5)            
+                
+                
+                
+            xlabel = fdmtFactor1
+            ylabel = fdmtFactor2
+            title = day+"_future_"+predictRet+".jpeg"
+            path = day+"_future_"+predictRet+".jpeg"
+            c=ScatterPlot.ScatterPlot(ebit2ev,roic,ret,xlabel,ylabel,title,path)
                 
                 
             for s in stks:
                 re.write(','+s)
             re.write("\n")
             re.write(day+',')
-            re.write("EBIT2EV")
+            re.write(fdmtFactor1)
             for s in stks:
-                re.write(','+repr(stkFctVals[s]["EBIT2EV_TTM"])) 
+                re.write(','+repr(stkFctVals[s][fdmtFactor1])) 
             re.write("\n")
             re.write(day+',')
-            re.write("ROIC")
+            re.write(fdmtFactor2)
             for s in stks:
-                re.write(','+repr(stkFctVals[s]["ROIC_TTM"]))  
+                re.write(','+repr(stkFctVals[s][fdmtFactor2]))  
             re.write("\n")
             re.write(day+',')
-            re.write("120dReturn")
+            re.write(predictRet)
             for s in stks:
-                re.write(','+repr(stkFctVals[s]["FRet120d"]))  
-            re.write("\n")            
+                re.write(','+repr(stkFctVals[s][predictRet]))  
+            re.write("\n")    
+            re.write(day+',')
+            re.write("Colour")
+            for i in range(len(stks)):
+                re.write(','+c[i])  
+            re.write("\n")             
         re.close()
         
         

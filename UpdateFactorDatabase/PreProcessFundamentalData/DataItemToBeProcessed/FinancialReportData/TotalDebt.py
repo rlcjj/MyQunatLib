@@ -18,15 +18,10 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     
     rptDate = rptInfo[0]
     sql1 = """
-           SELECT TotLiab
-                  -ifnull(AcctPayab,0)
-                  -ifnull(AdvanceFromCustomers,0) 
-                  -ifnull(PayrollPayab,0) 
-                  -ifnull(OtherPayab,0)
-                  -ifnull(AccruedExpns,0)
-                  -ifnull(DeferredRevenue,0)
-                  -ifnull(OtherCurLiab,0)
-                  -TotNonCurLiab
+           SELECT ifnull(ShtTmBorrow,0)
+                  +ifnull(NotesPayab,0)
+                  +ifnull(NonCurLiabWithin1Year,0)
+                  +ifnull(ShtTmDebenturePayab,0)
                   +ifnull(LngTmBorrow,0)
                   +ifnull(BondPayab,0)
            FROM BalanceSheet
@@ -84,9 +79,9 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
         print "Error, no type company"
     cur.execute(sql.format(stkCode,rptDate,lookupDate))
     #MyPrint(sql.format(stkCode,rptDate,lookupDate))
-    content = cur.fetchone()  
+    content = cur.fetchone()    
     if content==None:
         return None       
-    if content==None or content[0]==None or content[0]==0:
+    if content==None or content[0]==None:
         return None
     return content[0]

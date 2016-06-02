@@ -25,10 +25,10 @@ def Calc(cur,lookupDate,rptInfo,stkCode):
     
     sql1 = """
            SELECT OpRevenue
-                  -TaxAndSurcharge
-                  -OpCost
-                  -SellExpns
-                  -AdminExpns
+                  -ifnull(TaxAndSurcharge,0)
+                  -ifnull(OpCost,0)
+                  -ifnull(SellExpns,0)
+                  -ifnull(AdminExpns,0)
                   -ifnull(AssetsDeval,0)
            FROM IncomeStatement 
            WHERE StkCode='{}'

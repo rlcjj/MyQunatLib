@@ -20,6 +20,7 @@ def ScatterPlot(x,y,v,xlabel,ylabel,title,path):
     p1 = round(np.nanpercentile(_v,75),2)
     p2 = round(np.nanpercentile(_v,50),2)
     p3 = round(np.nanpercentile(_v,20),2)
+    print p1,p2,p3
     
     _s = []
     _c = []
@@ -36,11 +37,15 @@ def ScatterPlot(x,y,v,xlabel,ylabel,title,path):
         else:
             _c.append('white')    
 
-    pl.scatter(x,y,color=_c,s=_s)
+    pl.scatter(x,y,c=_c,s=_s,edgecolors='None')
     pl.xlabel(xlabel,color='black',size = 15)
     pl.ylabel(ylabel, color='black',size = 15)     
     pl.title(title)
     pl.grid()
-    #pl.show()
+
+    #for i in xrange((len(x))):
+    #    print x[i],y[i],v[i],_c[i]
+                   
     pl.savefig(path,dpi=100,format="jpeg")
     pl.close()    
+    return _c

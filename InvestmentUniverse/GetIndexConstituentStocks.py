@@ -45,7 +45,7 @@ class GetIndexConstituentStocks(object):
         
         
     #----------------------------------------------------------------------
-    def GetConstituentStocksAtGivenDate(self,date,*indexCode):
+    def GetConstituentStocksAtGivenDate(self,date,indexCode):
         """
         获取给定日期指数所包含的的成分股
         """
