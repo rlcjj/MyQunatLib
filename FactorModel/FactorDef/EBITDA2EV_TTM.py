@@ -24,14 +24,14 @@ def Calc(cur,rptInfo,p,s,date,stkCode):
     sql = """
           SELECT EBIT_TTM+DeprAndAmort_TTM_E,
                  TotalDebt
-                -Cash
+                -IFNUll(Cash,0)
                 +IFNULL(PreferStock,0)
                 +IFNULL(Eqty2Minor,0)
           FROM FinancialPITData
           WHERE StkCode='{}'
                 AND DeclareDate='{}'
           """
-    cur.execute(sql.format(stkCode,begDate,endDate))
+    cur.execute(sql.format(stkCode,decDate))
     content = cur.fetchone()
     if content==None:
         return None

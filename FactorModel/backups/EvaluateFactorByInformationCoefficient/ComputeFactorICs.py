@@ -140,7 +140,6 @@ class ComputeICs(object):
         """
         计算单个因子给定日期的IC
         """
-        mat = pd.DataFrame([self.zscores[factorName].values,self.zscoresStockReturn]).transpose()
         #print mat
         corr = mat.corr().values
         return corr[0,1]

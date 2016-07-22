@@ -6,6 +6,7 @@
   Created: 2016/5/24
 """
 
+
 import os,numpy
 from datetime import datetime,timedelta
 import sqlite3 as lite
@@ -58,29 +59,31 @@ class MagicFormula(object):
             factVal = self.objGetFactorValues.GetFactorValues(stk,date,effectiveTime)
             stockFactorValues[stk]=factVal
         return stockFactorValues
-        
-        
+    
+    
     #----------------------------------------------------------------------
-    def _ExcludeStocksOfSmallCap(self,stocks,stockFactorValues,cutOffPoint):
+    def _ExcludeStockStopTrading(self,stocks,stockFactorValues):
         """"""
         refinedStocks = []
         for stk in stocks:
-            if stockFactorValues[stk]["FloatCap1d"]>=cutOffPoint:
-                refinedStocks.append(stk)
-        return refinedStocks
+            if stockFactorValues[stk]["TradeStatus"]!=None:
+                if stockFactorValues[stk]["TradeStatus"]==-1 and  stockFactorValues[stk]["Ret1d"]<0.1:
+                    refinedStocks.append(stk)
+        return refinedStocks         
     
     
     #----------------------------------------------------------------------
-    def _ExcludeStocksOfGivenInsusty(self,stocks,stockFactorValues,rptType):
+    def _ExcludeFinancialReportType(self,stocks,stockFactorValues,rptTypes):
         """"""
         refinedStocks = []
         for stk in stocks:
             if stockFactorValues[stk]["RptType"]!=None:
-                if stockFactorValues[stk]["RptType"]==1:
+                if not stockFactorValues[stk]["RptType"] in rptTypes:
+                    #print stockFactorValues[stk]["RptType"],type(stockFactorValues[stk]["RptType"])
                     refinedStocks.append(stk)
-        return refinedStocks
+        return refinedStocks    
     
-
+    
     #----------------------------------------------------------------------
     def _Winsorzie(self,lst,percentile):
         """"""
@@ -97,73 +100,98 @@ class MagicFormula(object):
             else:
                 _lst.append(item)
         return _lst
-                    
-        
+    
     
     #----------------------------------------------------------------------
-    def GenerateTradeList(self,cutOffPoint):
+    def _Trim(self,lst,percentile):
         """"""
-        re = open("results.csv",'w')
-        self.objGetFactorValues.ChooseFactors(["EBIT2EV_TTM","ROIC_TTM","ChangeInGrossMargin_TTM"],["logsize","FRet20d"],[])
-        fdmtFactor1 = "EBIT2EV_TTM"
-        fdmtFactor2 = "FRet20d"  
-        predictRet = "FRet20d"
+        _lst = []
+        p1 = numpy.nanpercentile(lst,percentile,interpolation='lower')
+        p2 = numpy.nanpercentile(lst,100-percentile,interpolation='higher')
+        for item in lst:
+            if item>p1:
+                _lst.append(numpy.nan)
+            elif item<=p1 and item>p2:
+                _lst.append(item)
+            elif item<=p2:
+                _lst.append(numpy.nan)
+            else:
+                _lst.append(item)
+        return _lst    
+    
+    #----------------------------------------------------------------------
+    def GeneratePortfolios(self,factorName1,factorName2,effectiveDate,quantile,rptTypes,seq):
+        """""" 
+        self.objGetFactorValues.ChooseFactors([factorName1,factorName2],["Ret1d","TradeStatus"],[])
+        portfolios = {}
+        self.outputFactorVals = {"date":[],"vals":[]}
         for day in self.rebalaceDays:
-            stks = self.objConstituentStocks.GetAllStocksExcludedAfterGivenDate(day,self.constituentIndexCode)
-            stkFctVals = self._FetchStockFactorValues(day,stks,180)
-            #stks = self._ExcludeStocksOfSmallCap(stks,stkFctVals,cutOffPoint)
-            stks = self._ExcludeStocksOfGivenInsusty(stks,stkFctVals,1)
-            re.write(day+',')
-            re.write("StockCode")
-            ebit2ev=[]
-            roic=[]
-            ret=[]
-            for s in stks:
-                ebit2ev.append(stkFctVals[s][fdmtFactor1])
-                roic.append(stkFctVals[s][fdmtFactor2])
-                ret.append(stkFctVals[s][predictRet])
-            ebit2ev = self._Winsorzie(ebit2ev,99.5)
-            roic = self._Winsorzie(roic,99.5)            
+            stks = self.objConstituentStocks.GetConstituentStocksAtGivenDate(day,self.constituentIndexCode)
+            numOfStks = len(stks)
+            numSelected = int(quantile*numOfStks)  
+            #print numOfStks,numSelected
+            stkFctVals = self._FetchStockFactorValues(day,stks,effectiveDate)
+            stks = self._ExcludeFinancialReportType(stks,stkFctVals,rptTypes)
+            stkd = self._ExcludeStockStopTrading(stks,stkFctVals)
+            port = {}
+            _factorDict1 = {}
+            _factorDict2 = {}
+            _longList = []
+            _shortList = []
+            sortedStksDict1 = {}
+            sortedStksDict2 = {}
+            i = 0
+            j = 0
+            for stk in stks:
+                if not numpy.isnan(stkFctVals[stk][factorName1]):
+                    _factorDict1[stk]=stkFctVals[stk][factorName1]
+                if not numpy.isnan(stkFctVals[stk][factorName2]):
+                    _factorDict2[stk]=stkFctVals[stk][factorName2]                
+            for stk in sorted(_factorDict1,key=_factorDict1.get,reverse=True):
+                sortedStksDict1[stk] = i
+                i+=1
+            for stk in sorted(_factorDict2,key=_factorDict2.get,reverse=True):
+                sortedStksDict2[stk] = j
+                j+=1    
+            _factorDict = {}
+            for stk in sortedStksDict1.keys():
+                if stk in sortedStksDict2.keys():
+                    _factorDict[stk] = sortedStksDict1[stk]+sortedStksDict2[stk]
+                    
+            sortedStks = []
+            for stk in sorted(_factorDict,key=_factorDict.get):
+                sortedStks.append(stk)            
                 
-                
-                
-            xlabel = fdmtFactor1
-            ylabel = fdmtFactor2
-            title = day+"_future_"+predictRet+".jpeg"
-            path = day+"_future_"+predictRet+".jpeg"
-            c=ScatterPlot.ScatterPlot(ebit2ev,roic,ret,xlabel,ylabel,title,path)
-                
-                
-            for s in stks:
-                re.write(','+s)
-            re.write("\n")
-            re.write(day+',')
-            re.write(fdmtFactor1)
-            for s in stks:
-                re.write(','+repr(stkFctVals[s][fdmtFactor1])) 
-            re.write("\n")
-            re.write(day+',')
-            re.write(fdmtFactor2)
-            for s in stks:
-                re.write(','+repr(stkFctVals[s][fdmtFactor2]))  
-            re.write("\n")
-            re.write(day+',')
-            re.write(predictRet)
-            for s in stks:
-                re.write(','+repr(stkFctVals[s][predictRet]))  
-            re.write("\n")    
-            re.write(day+',')
-            re.write("Colour")
-            for i in range(len(stks)):
-                re.write(','+c[i])  
-            re.write("\n")             
-        re.close()
-        
-        
-
-            
-
-        
-        
+            if len(sortedStks)>2*numSelected:
+                if seq==1:
+                    port["long"] = sortedStks[0:numSelected]
+                    port["short"] = sortedStks[-numSelected:]     
+                else:
+                    port["long"] = sortedStks[-numSelected:]
+                    port["short"] = sortedStks[0:numSelected]
+            else:
+                port["long"] = []
+                port["short"] = []
+            portfolios[day] = port
+            self.outputFactorVals["date"].append(day)
+            self.outputFactorVals["vals"].append(_factorDict)
+            self.factorName = factorName1+factorName2
+        return portfolios
     
     
+    #----------------------------------------------------------------------
+    def Output(self,path):
+        """"""
+        if not os.path.exists(path):
+            os.makedirs(path)
+        f = open("{}FactorValues_{}.csv".format(path,self.factorName),'w')
+        for i in xrange(len(self.outputFactorVals["date"])):
+            f.write(self.outputFactorVals["date"][i])
+            for stk in sorted(self.outputFactorVals["vals"][i],key=self.outputFactorVals["vals"][i].get,reverse=True): 
+                f.write(",{}".format(stk))
+            f.write("\n")
+            for stk in sorted(self.outputFactorVals["vals"][i],key=self.outputFactorVals["vals"][i].get,reverse=True): 
+                f.write(",{}".format(self.outputFactorVals["vals"][i][stk]))
+            f.write("\n") 
+        f.close()
+

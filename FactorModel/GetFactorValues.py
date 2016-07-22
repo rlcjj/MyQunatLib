@@ -28,6 +28,7 @@ class GetFactorValues(object):
             self.logger = LogHandler.LogOutputHandler("ComputeFactorsAndZScores")
         else:    
             self.logger = logger
+        self.trdDays = GetTrdDay.GetTradeDays()  
             
     
     #----------------------------------------------------------------------
@@ -66,6 +67,49 @@ class GetFactorValues(object):
         self.technicalFactors = technicals
         self.analystFactors = analysts
         
+        
+    #----------------------------------------------------------------------
+    def GetFutureReturns(self,stkCode,date,horizon):
+        """"""
+        curTech = self.technicalConn.cursor()
+        p = self.trdDays.index(date)
+        _date = self.trdDays[p+horizon]
+        sql = """
+              SELECT ClosePrice_Adj 
+              FROM TechnicalFactors
+              WHERE StkCode='{}'
+              AND Date in ('{}','{}')
+              ORDER BY Date ASC
+              """
+        curTech.execute(sql.format(stkCode,date,_date))
+        rows = curTech.fetchall()
+        if len(rows)<2:
+            return numpy.nan
+        else:
+            return (rows[1][0]-rows[0][0])/rows[0][0]
+        
+        
+    #----------------------------------------------------------------------
+    def GetHistoricalReturns(self,stkCode,date,horizon):
+        """"""
+        curTech = self.technicalConn.cursor()
+        p = self.trdDays.index(date)
+        _date = self.trdDays[p-horizon]
+        sql = """
+                  SELECT ClosePrice_Adj 
+                  FROM TechnicalFactors
+                  WHERE StkCode='{}'
+                  AND Date in ('{}','{}')
+                  ORDER BY Date ASC
+                  """
+        curTech.execute(sql.format(stkCode,date,_date))
+        rows = curTech.fetchall()
+        if len(rows)<2:
+            return numpy.nan
+        else:
+            return (rows[1][0]-rows[0][0])/rows[0][0]        
+        
+    
     
     #----------------------------------------------------------------------
     def GetFactorValues(self,stkCode,date,effectiveTime):
@@ -160,4 +204,6 @@ class GetFactorValues(object):
                         factorValues[self.technicalFactors[i]]=content[i+1]                    
                     
         return factorValues
+            
+
             

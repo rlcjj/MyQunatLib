@@ -11,6 +11,7 @@ import sqlite3 as lite
 import numpy as np
 import Tools.GetLocalDatabasePath as GetPath
 import Tools.GetTradeDays as GetTrdDay
+import Tools.Draw as Draw
 
 
 ########################################################################
@@ -21,11 +22,13 @@ class SimpleBacktest(object):
     def __init__(self,logger):
         """Constructor"""
         self.logger = logger
+        self.logger.info("<{}>-Initiate object".format(__name__.split('.')[-1]))
         
         
     #----------------------------------------------------------------------
     def LoadDatabase(self,dbNameMarketData,startDate,useInMemory,conn):
         """"""
+        self.logger.info("<{}>-Load local market database".format(__name__.split('.')[-1]))
         dbPath = GetPath.GetLocalDatabasePath()["EquityDataRaw"]
         dbPath = dbPath + dbNameMarketData
         if conn!=None:
@@ -48,6 +51,7 @@ class SimpleBacktest(object):
     #----------------------------------------------------------------------
     def LoadPortfolios(self,portfolios):
         """"""
+        self.logger.info("<{}>-Load portfolios".format(__name__.split('.')[-1]))
         self.trdDate = GetTrdDay.GetTradeDays()
         self.rebalanceDate = sorted(portfolios.keys())
         self.ports = portfolios
@@ -56,6 +60,7 @@ class SimpleBacktest(object):
     #----------------------------------------------------------------------
     def _GetStocksAverageReturn(self,date,stockList):
         """"""
+        self.logger.info("<{}>-Calculate portfolio return-{}".format(__name__.split('.')[-1],date))
         cur = self.conn.cursor()
         if len(stockList)==0:
             rets = {"None":[0]}
@@ -72,14 +77,17 @@ class SimpleBacktest(object):
                 content = cur.fetchone()
                 #if date=="20141231":
                 #    print stk,content
-                if content!=None and content[0]!=None and content[0]<0.1 and content[0]>-0.1:
+                if content!=None and content[0]!=None:
                     rets[stk]=(content[0])
+                else:
+                    rets[stk] = np.nan
         return rets
         
         
     #----------------------------------------------------------------------
     def _GetIndexReturn(self,date,indexCode):
         """"""
+        self.logger.info("<{}>-Calculate index {} return-{}".format(__name__.split('.')[-1],indexCode,date))
         cur = self.conn.cursor()
         sql = """
               SELECT (TC-LC)/LC
@@ -95,6 +103,7 @@ class SimpleBacktest(object):
     #----------------------------------------------------------------------
     def Run(self,strategyName,begDate,endDate,benchMark):
         """"""
+        self.logger.info("<{}>-Start backtesting".format(__name__.split('.')[-1]))
         self.strategyName = strategyName
         trdDate = []
         for d in self.trdDate:
@@ -119,10 +128,10 @@ class SimpleBacktest(object):
 
             longRetsDict = self._GetStocksAverageReturn(d,longPort)
             shortRetsDict = self._GetStocksAverageReturn(d,shortPort)
-            longRet = np.mean(longRetsDict.values())
-            shortRet = np.mean(shortRetsDict.values())
-            hedgedRet = longRet-shortRet
+            longRet = np.nanmean(longRetsDict.values())
+            shortRet = np.nanmean(shortRetsDict.values())
             indexRet = self._GetIndexReturn(d,benchMark)
+            hedgedRet = longRet-shortRet
             self.longRetList.append(longRet)
             self.shortRetList.append(shortRet)
             self.hedgedRetList.append(hedgedRet)
@@ -130,25 +139,26 @@ class SimpleBacktest(object):
             
             if d in rebDate:
                 longPort = self.ports[d]["long"]
-                shortPort = self.ports[d]["short"]            
+                shortPort = self.ports[d]["short"]
             
             self.debugInfo["long_rets"].append(longRetsDict)
             self.debugInfo["short_rets"].append(shortRetsDict)                
             self.debugInfo["date"].append(d)
             
     #----------------------------------------------------------------------
-    def Output(self,debug=0):
+    def Output(self,dirName,debug=0):
         """"""
-        if not os.path.exists("HedgedReturn"):
-            os.mkdir("HedgedReturn")
-        res = open("HedgedReturn\\"+self.strategyName+".csv",'w')
+        self.logger.info("<{}>-Output results".format(__name__.split('.')[-1]))
+        if not os.path.exists(dirName):
+            os.mkdir(dirName)
+        res = open(dirName+self.strategyName+".csv",'w')
         res.write("date,long_ret,short_ret,hedged_ret,index_ret\n")
         for i in xrange(len(self._trdDate)):
             res.write("{},{},{},{},{}\n".format(self._trdDate[i],self.longRetList[i],self.shortRetList[i],self.hedgedRetList[i],self.indexRetList[i]))
         res.close()
         
         if debug==1:
-            dbg = open("HedgedReturn\\debug_"+self.strategyName+".csv",'w')
+            dbg = open("{}\\debug_".format(dirName)+self.strategyName+".csv",'w')
             for i in xrange(len(self.debugInfo["date"])):
                 dbg.write(self.debugInfo["date"][i])
                 for item in self.debugInfo["long_rets"][i].keys():
@@ -164,6 +174,13 @@ class SimpleBacktest(object):
                     dbg.write(','+repr(self.debugInfo["short_rets"][i][item]))
                 dbg.write("\n")  
             dbg.close()
+        
+        Draw.DrawCumulativeReturnCurve(self._trdDate,
+                                       {"HedgedReturn":self.hedgedRetList},
+                                        [{"IndexReturn":self.indexRetList},{"LongPortReturn":self.longRetList},{"ShortPortReturn":self.shortRetList}],
+                                       dirName,self.strategyName)
+        
+        
             
             
         

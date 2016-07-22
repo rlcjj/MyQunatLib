@@ -167,15 +167,3 @@ class ComputeFactorValues(object):
         conn.commit()        
 
 
-    #----------------------------------------------------------------------
-    def Winsorize(self,mat,std):
-        """"""
-        _std = numpy.nanstd(mat,0)
-        #_std[_std==0]=99999999
-        _mean = numpy.nanmean(mat,0)
-        _mat = (mat-_mean)/_std
-        _mat[_mat>std] = std
-        _mat[_mat<-std] = -std
-        return _mat
-
-        

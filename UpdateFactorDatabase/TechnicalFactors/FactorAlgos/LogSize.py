@@ -16,5 +16,5 @@ def Calc(df):
     计算LogSize
     """
     mcap = np.log(df["price"]*df["f_cap"])
-    res = mcap.to_frame("logsize")
+    res = mcap.to_frame("LogSize")
     return res

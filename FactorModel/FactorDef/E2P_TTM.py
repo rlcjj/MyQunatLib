@@ -22,7 +22,7 @@ def Calc(cur,rptInfo,p,s,date,stkCode):
     decDate = rptInfo[1]        
     
     sql = """
-          SELECT NetProfits2Parent
+          SELECT NetProfits2Parent_TTM
           FROM FinancialPITData
           WHERE StkCode='{}'
                 AND DeclareDate='{}'

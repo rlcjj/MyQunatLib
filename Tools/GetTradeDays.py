@@ -102,7 +102,35 @@ class TradeDays(object):
                         thisQuarter=(int(d[4:6])-1)/3
                     if k==rebalanceDay:
                         rebalanceDays.append(d)
-        return rebalanceDays
+    
+        if freq == "halfyearly":
+            k = 0
+            for d in self.trdDay:
+                if d>startDay and d<=endDate:
+                    if int(d[4:6]) == 4 or int(d[4:6]) == 10:
+                        k+=1
+                    else:
+                        k=0
+                if k==rebalanceDay:
+                    rebalanceDays.append(d)
+                    
+                    
+        if freq == "yearly":
+            k = 0
+            thisYear = startDay[4:6]
+            for d in self.trdDay:
+                if d>startDay and d<=endDate:
+                    if d[0:4]== thisYear:
+                        k+=1
+                    else:
+                        k=0
+                        thisYear = d[0:4]
+                if k==rebalanceDay:
+                    rebalanceDays.append(d)                    
+        return rebalanceDays    
+    
+    
+    
 
                         
         

@@ -40,7 +40,7 @@ def Calc(cur,rptInfo,p,s,date,stkCode):
     v2 = content[1]
     ev = (s*p*10000.0)+v2
     if ev<=0:
-        return 5
+        return None
     else:
         #print v1,v2,s,p,(s*p*10000.0)+v2
         return v1/((s*p*10000.0)+v2)
